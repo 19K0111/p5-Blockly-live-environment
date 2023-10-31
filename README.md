@@ -6,8 +6,8 @@ p5.jsとGoogle Blocklyを合わせたライブコーディングシステム
 `$ git clone https://github.com/19K0111/p5-Blockly-live-environment.git`  
 
 ## ライブラリ
-Google Blockly: [`node_modules/`]("./node_modules")  
-p5.js: [`p5/`]("./p5/")
+Google Blockly: [`node_modules/`](node_modules)  
+p5.js: [`p5/`](p5/)
 
 ## index.html
 メインのHTMLファイル
