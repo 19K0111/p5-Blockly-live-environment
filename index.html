@@ -4,10 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>P5 Block Live Programming Environment</title>
     <script src="node_modules/blockly/blockly_compressed.js"></script>
     <script src="node_modules/blockly/blocks_compressed.js"></script>
     <script src="node_modules/blockly/msg/ja.js"></script>
+    <script src="node_modules/blockly/javascript.js"></script>
+    <!-- p5.js -->
+    <script src="p5/p5.min.js"></script>
+    <!-- Bootstrap -->
+    <script src="bootstrap/bootstrap.min.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -34,7 +39,7 @@
             height: 99%;
         }
 
-        .p5Preview {
+        #p5Preview {
             width: 50%;
             height: 99%;
             left: 50%;
@@ -45,8 +50,82 @@
 
 <body>
     <div>
+        <ul class="nav nav-tabs">
+            <li class="nav-item"><a onclick="showBlock()" class="nav-link active" data-bs-toggle="tab"
+                    role="tab">Blockly</a>
+            </li>
+            <li class="nav-item"><a onclick="showText()" class="nav-link" data-bs-toggle="tab" role="tab">Text
+                    Editor</a>
+            </li>
+        </ul>
+        <!-- <div class="tab-content">
+            <div id="blockly" class="tab-pane active show" role="tabpanel">
+            </div>
+            <div id="texteditor" class="tab-pane" role="tabpanel">texteditor</div>
+        </div> -->
         <!-- <div id="blocklyArea"></div> -->
         <div id="blocklyDiv" style="width:49%;height:99%; position:  absolute;"></div>
+        <div id="textDiv" style="width:49%;height:99%; position: absolute;" hidden>
+            <!-- Monaco Editor -->
+            <div id="container" style="width: 100%; height: 100vh; border: 1px solid grey; ">
+            </div>
+            <script src="./node_modules/monaco-editor/min/vs/loader.js"></script>
+            <script>
+                let editor;
+                require.config({
+                    paths: {
+                        vs: "./node_modules/monaco-editor/min/vs"
+                    },
+                    "vs/nls": {
+                        availableLanguages: { "*": "ja" }
+                    },
+                });
+
+                require(["vs/editor/editor.main"], function () {
+                    editor = monaco.editor.create(
+                        document.getElementById("container"),
+                        {
+                            value: [
+                                "function _setup_() {",
+                                "    ",
+                                "}\n",
+                                "function _draw_() {",
+                                "    ",
+                                "}\n",
+                            ].join("\n"),
+                            language: "javascript",
+                            automaticLayout: true,
+                            // readOnly: true,
+                        }
+                    );
+                    editor.getModel().onDidChangeContent((event) => {
+                        // console.log(editor.getValue());
+                        // eval("" + editor.getValue() + "_setup_();_draw_();");
+                        execCode = new Function(getCodeBlock());
+                        execCode();
+                    })
+                    // editor.updateOptions({
+                    //   wordWrap: "on",
+                    // });
+                    // editor.getValue();
+                });
+
+                function getCodeBlock() {
+                    var data = editor.getValue().replace(/\s+\n/g, "");
+                    data = data.replace(/\s+-+/g, "\n");
+                    console.log(data);
+                    return data;
+                };
+            </script>
+            <script>
+                window.addEventListener("resize", function () {
+                    let container = document.getElementById("container");
+                    console.log(container);
+                    container.style.width = "100%";
+                    container.style.height = "100vh";
+                });
+            </script>
+        </div>
         <!-- Toolbox begin -->
         <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
             <category name="Logic" colour="#5b80a5">
@@ -407,7 +486,30 @@
             <category name="Functions" colour="#995ba5" custom="PROCEDURE"></category>
         </xml>
         <!-- Toolbox end -->
-        <div class="p5Preview">p5.js preview</div>
+        <div id="p5Preview">
+            <span>p5.js preview</span>
+            <main></main>
+            <script>
+                let canvas = null;
+                let x = 0;
+                function setup() {
+                    // createCanvas(400, 500);
+                    // frameRate(5);
+                }
+
+                function draw() {
+                    // fill(x);
+                    // rect(100, 200, 300, 300);
+                    // x += 5;
+                    userCode();
+                }
+
+                function userCode() {
+
+                }
+
+            </script>
+        </div>
     </div>
     <script>
         /* TODO: Change toolbox XML ID if necessary. Can export toolbox XML from Workspace Factory. */
@@ -454,6 +556,20 @@
 
         /* Load blocks to workspace. */
         Blockly.Xml.domToWorkspace(workspaceBlocks, workspace);
+
+        function showBlock() {
+            let blocklyContent = document.getElementById("blocklyDiv");
+            let textContent = document.getElementById("textDiv");
+            blocklyContent.hidden = false;
+            textContent.hidden = true;
+        }
+
+        function showText() {
+            let blocklyContent = document.getElementById("blocklyDiv");
+            let textContent = document.getElementById("textDiv");
+            blocklyContent.hidden = true;
+            textContent.hidden = false;
+        }
     </script>
 
 </body>
