@@ -86,10 +86,10 @@
                         document.getElementById("container"),
                         {
                             value: [
-                                "function _setup_() {",
+                                "function setup() {",
                                 "    ",
                                 "}\n",
-                                "function _draw_() {",
+                                "function draw() {",
                                 "    ",
                                 "}\n",
                             ].join("\n"),
@@ -101,8 +101,17 @@
                     editor.getModel().onDidChangeContent((event) => {
                         // console.log(editor.getValue());
                         // eval("" + editor.getValue() + "_setup_();_draw_();");
-                        execCode = new Function(getCodeBlock());
-                        execCode();
+                        // execCode = new Function(getCodeBlock());
+                        // execCode();
+
+                        let iframe = document.getElementById("p5frame");
+                        let current_dir = location.href.split("/");
+                        current_dir.pop();
+                        let header_html = `\<html\>\<head\>\<script src=\"${current_dir.join("/")}/p5/p5.min.js\"\>\<\/script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
+                        let footer_html = `\<\/script\>\<\/body\>\<\/html\>`;
+                        let blob = new Blob([header_html + getCodeBlock() + footer_html]);
+                        iframe.src = URL.createObjectURL(blob);
+
                     })
                     // editor.updateOptions({
                     //   wordWrap: "on",
@@ -488,7 +497,8 @@
         <!-- Toolbox end -->
         <div id="p5Preview">
             <span>p5.js preview</span>
-            <main></main>
+            <iframe id="p5frame" frameborder="0" style="width: 100%;height: 94%;"></iframe>
+            <!-- <main></main>
             <script>
                 let canvas = null;
                 let x = 0;
@@ -508,7 +518,7 @@
 
                 }
 
-            </script>
+            </script> -->
         </div>
     </div>
     <script>
