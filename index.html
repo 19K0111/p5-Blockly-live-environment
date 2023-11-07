@@ -192,6 +192,11 @@
                 <block type="math_number">
                     <field name="NUM">0</field>
                 </block>
+                <!-- Added: expression begin-->
+                <block type="expression">
+                    <field name="expression">1+2</field>
+                </block>
+                <!-- expression end -->
                 <block type="math_arithmetic">
                     <field name="OP">ADD</field>
                     <value name="A">
@@ -522,6 +527,18 @@
         </div>
     </div>
     <script>
+        // type expression: 
+        Blockly.Blocks['expression'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField(new Blockly.FieldTextInput("1+2"), "expression");
+                this.setOutput(true, "Number");
+                this.setColour(230);
+                this.setTooltip("四則演算を含む式。");
+                this.setHelpUrl("");
+            }
+        };
+
         /* TODO: Change toolbox XML ID if necessary. Can export toolbox XML from Workspace Factory. */
         var toolbox = document.getElementById("toolbox");
 
