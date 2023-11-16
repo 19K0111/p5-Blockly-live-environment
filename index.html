@@ -9,6 +9,8 @@
     <script src="node_modules/blockly/blocks_compressed.js"></script>
     <script src="node_modules/blockly/msg/ja.js"></script>
     <script src="node_modules/blockly/javascript.js"></script>
+    <script src="node_modules/blockly/javascript_compressed.js"></script>
+
     <!-- p5.js -->
     <script src="p5/p5.min.js"></script>
     <!-- Bootstrap -->
@@ -192,11 +194,11 @@
                 <block type="math_number">
                     <field name="NUM">0</field>
                 </block>
-                <!-- Added: expression begin-->
-                <block type="expression">
-                    <field name="expression">1+2</field>
+                <!-- Added: math_expression begin-->
+                <block type="math_expression">
+                    <field name="EXPR">1+2</field>
                 </block>
-                <!-- expression end -->
+                <!-- math_expression end -->
                 <block type="math_arithmetic">
                     <field name="OP">ADD</field>
                     <value name="A">
@@ -498,6 +500,14 @@
             <sep></sep>
             <category name="Variables" colour="#a55b80" custom="VARIABLE"></category>
             <category name="Functions" colour="#995ba5" custom="PROCEDURE"></category>
+            <sep></sep>
+            <category name="p5.js" colour="#ed225e" id="p5_category"></category>
+        </xml>
+        <xml id="startBlocks" style="display: none;">
+            <!-- ページを開いたときに配置させるブロック -->
+            <block type="math_expression" x="0" y="0">
+                <field name="EXPR">1+2</field>
+            </block>
         </xml>
         <!-- Toolbox end -->
         <div id="p5Preview">
@@ -527,17 +537,73 @@
         </div>
     </div>
     <script>
-        // type expression: 
-        Blockly.Blocks['expression'] = {
+        // type math_expression: 
+        Blockly.Blocks['math_expression'] = {
             init: function () {
                 this.appendDummyInput()
-                    .appendField(new Blockly.FieldTextInput("1+2"), "expression");
+                    .appendField(new Blockly.FieldTextInput("1+2"), "EXPR");
                 this.setOutput(true, "Number");
                 this.setColour(230);
                 this.setTooltip("四則演算を含む式。");
                 this.setHelpUrl("");
             }
         };
+        javascript.javascriptGenerator.forBlock["math_expression"] = function (block, generator) {
+            var value_name = generator.valueToCode(block, "EXPR", javascript.Order.ATOMIC);
+            // console.log(block.getFieldValue("EXPR"));
+            var code = block.getFieldValue("EXPR"); // ex. 2*3+4
+            return [code, javascript.Order.NONE];
+        };
+
+        // test for p5 block
+        let p5_category = document.getElementById("p5_category");
+        let functions = ["fill", "rect", "ellipse", "line"]
+        for (const f of functions) {
+            // console.log(`p5_${f}`);
+            Blockly.Blocks[`p5_${f}`] = {
+                init: function () {
+                    this.appendValueInput("ARGS")
+                        .setCheck(null)
+                        .appendField(`${f}(`);
+                    this.appendEndRowInput()
+                        .appendField(")");
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour(290);
+                    this.setTooltip("");
+                    this.setHelpUrl(`https://p5js.org/reference/#/p5/${f}`);
+                }
+            };
+            javascript.javascriptGenerator.forBlock[`p5_${f}`] = function (block, generator) {
+                var value_name = generator.valueToCode(block, `${f}`.toUpperCase(), javascript.Order.NONE); // ex. (10, 20, 30, 40): if Order.ATOMIC, 10, 20, 30, 40: if Order.NONE
+                // var code = block.getFieldValue(`${f}`.toUpperCase()); 
+                return `${f}(${value_name});\n`;
+            };
+
+            // id="p5_category"に<block>を動的に追加する処理
+            /*
+            <block type="p5_xxx">
+                <value name="ARGS">
+                    <shadow type="math_expression">
+                        <field name="EXPR">0</field>
+                    </shadow>
+                </value>
+            </block>
+            */
+            let new_block = document.createElement("block");
+            new_block.setAttribute("type", `p5_${f}`);
+            let block_value = document.createElement("value");
+            block_value.setAttribute("name", "ARGS");
+            let block_value_shadow = document.createElement("shadow");
+            block_value_shadow.setAttribute("type", "math_expression");
+            let block_value_shadow_field = document.createElement("field");
+            block_value_shadow_field.setAttribute("name", "EXPR");
+            block_value_shadow_field.textContent = "0";
+            block_value_shadow.appendChild(block_value_shadow_field);
+            block_value.appendChild(block_value_shadow);
+            new_block.appendChild(block_value);
+            p5_category.appendChild(new_block);
+        }
 
         /* TODO: Change toolbox XML ID if necessary. Can export toolbox XML from Workspace Factory. */
         var toolbox = document.getElementById("toolbox");
@@ -579,10 +645,30 @@
         /* Load Workspace Blocks from XML to workspace. Remove all code below if no blocks to load */
 
         /* TODO: Change workspace blocks XML ID if necessary. Can export workspace blocks XML from Workspace Factory. */
-        var workspaceBlocks = document.getElementById("workspaceBlocks");
+        var workspaceBlocks = document.getElementById("startBlocks");
 
         /* Load blocks to workspace. */
         Blockly.Xml.domToWorkspace(workspaceBlocks, workspace);
+
+        const supportedEvents = new Set([
+            Blockly.Events.BLOCK_CHANGE,
+            Blockly.Events.BLOCK_CREATE,
+            Blockly.Events.BLOCK_DELETE,
+            Blockly.Events.BLOCK_MOVE,
+        ]);
+
+        function updateCode(event) {
+            if (workspace.isDragging()) return; // Don't update while changes are happening.
+            if (!supportedEvents.has(event.type)) return;
+
+            const code = javascript.javascriptGenerator.workspaceToCode(workspace);
+            // document.getElementById('textarea').value = code;
+            // console.log(code);
+            editor.setValue(code);
+        }
+
+        workspace.addChangeListener(updateCode);
+
 
         function showBlock() {
             let blocklyContent = document.getElementById("blocklyDiv");
