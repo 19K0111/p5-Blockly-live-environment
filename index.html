@@ -499,7 +499,7 @@
             </category>
             <sep></sep>
             <category name="Variables" colour="#a55b80" custom="VARIABLE"></category>
-            <category name="Functions" colour="#995ba5" custom="PROCEDURE"></category>
+            <category name="Functions" colour="#995ba5" custom="PROCEDURE" id="function_category"></category>
             <sep></sep>
             <category name="p5.js" colour="#ed225e" id="p5_category"></category>
         </xml>
@@ -555,11 +555,72 @@
             return [code, javascript.Order.NONE];
         };
 
-        // test for p5 block
+        // Function argument blocks
+        const ARG_MAX = 4; // 最大の引数の個数
         let p5_category = document.getElementById("p5_category");
+        let function_category = document.getElementById("function_category");
+        for (let i = 2; i <= ARG_MAX; i++) {
+            // Block定義
+            Blockly.Blocks[`function_${i}args`] = {
+                init: function () {
+                    this.appendValueInput("ARG1")
+                        .setCheck(null);
+                    for (let j = 2; j <= i; j++) {
+                        this.appendValueInput(`ARG${j}`)
+                            .setCheck(null)
+                            .appendField(",");
+                    }
+                    this.appendEndRowInput();
+                    this.setOutput(true, null);
+                    this.setColour(230);
+                    this.setTooltip("");
+                    this.setHelpUrl("");
+                }
+            };
+
+            // コード生成の定義
+            javascript.javascriptGenerator.forBlock[`function_${i}args`] = function (block, generator) {
+                // TODO: Assemble javascript into code variable.
+                var code = `${generator.valueToCode(block, 'ARG1', javascript.Order.NONE)}`; // 1個目の引数を入れる部分
+                for (let j = 2; j <= i; j++) {
+                    code = `${code}, ${generator.valueToCode(block, `ARG${j}`, javascript.Order.NONE)}`; // j(<=i)個目の引数を入れる部分
+                }
+                // TODO: Change ORDER_NONE to the correct strength.
+                return [code, javascript.Order.NONE];
+            };
+
+            // ブロック一覧に配置
+            let new_block = document.createElement("block");
+            new_block.setAttribute("type", `function_${i}args`);
+            let block_value = document.createElement("value");
+            block_value.setAttribute("name", "ARG1");
+            let block_value_shadow = document.createElement("shadow");
+            block_value_shadow.setAttribute("type", "math_expression");
+            let block_value_shadow_field = document.createElement("field");
+            block_value_shadow_field.setAttribute("name", "EXPR");
+            block_value_shadow_field.textContent = "0";
+            block_value_shadow.appendChild(block_value_shadow_field);
+            block_value.appendChild(block_value_shadow);
+            new_block.appendChild(block_value);
+            for (let j = 2; j <= i; j++) {
+                let block_value = document.createElement("value");
+                block_value.setAttribute("name", `ARG${j}`);
+                let block_value_shadow = document.createElement("shadow");
+                block_value_shadow.setAttribute("type", "math_expression");
+                let block_value_shadow_field = document.createElement("field");
+                block_value_shadow_field.setAttribute("name", "EXPR");
+                block_value_shadow_field.textContent = "0";
+                block_value_shadow.appendChild(block_value_shadow_field);
+                block_value.appendChild(block_value_shadow);
+                new_block.appendChild(block_value);
+            }
+            p5_category.appendChild(new_block);
+        }
+
+        // test for p5 block
         let functions = ["fill", "rect", "ellipse", "line"]
         for (const f of functions) {
-            // console.log(`p5_${f}`);
+            // リストにあるp5の関数ブロックの定義
             Blockly.Blocks[`p5_${f}`] = {
                 init: function () {
                     this.appendValueInput("ARGS")
@@ -574,8 +635,10 @@
                     this.setHelpUrl(`https://p5js.org/reference/#/p5/${f}`);
                 }
             };
+
+            // コード生成の定義
             javascript.javascriptGenerator.forBlock[`p5_${f}`] = function (block, generator) {
-                var value_name = generator.valueToCode(block, `${f}`.toUpperCase(), javascript.Order.NONE); // ex. (10, 20, 30, 40): if Order.ATOMIC, 10, 20, 30, 40: if Order.NONE
+                var value_name = generator.valueToCode(block, `ARGS`.toUpperCase(), javascript.Order.NONE); // ex. (10, 20, 30, 40): if Order.ATOMIC, 10, 20, 30, 40: if Order.NONE
                 // var code = block.getFieldValue(`${f}`.toUpperCase()); 
                 return `${f}(${value_name});\n`;
             };
@@ -604,6 +667,7 @@
             new_block.appendChild(block_value);
             p5_category.appendChild(new_block);
         }
+
 
         /* TODO: Change toolbox XML ID if necessary. Can export toolbox XML from Workspace Factory. */
         var toolbox = document.getElementById("toolbox");
