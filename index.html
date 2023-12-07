@@ -505,9 +505,11 @@
         </xml>
         <xml id="startBlocks" style="display: none;">
             <!-- ページを開いたときに配置させるブロック -->
-            <block type="math_expression" x="0" y="0">
+            <!-- <block type="math_expression" x="0" y="0">
                 <field name="EXPR">1+2</field>
-            </block>
+            </block> -->
+            <block type="p5_setup" x="20" y="20"></block>
+            <block type="p5_draw" x="20" y="120"></block>
         </xml>
         <!-- Toolbox end -->
         <div id="p5Preview">
@@ -555,10 +557,59 @@
             return [code, javascript.Order.NONE];
         };
 
-        // Function argument blocks
-        const ARG_MAX = 4; // 最大の引数の個数
+        // カテゴリのDOMを取得
         let p5_category = document.getElementById("p5_category");
         let function_category = document.getElementById("function_category");
+
+        // p5 setup() ブロックの定義
+        Blockly.Blocks['p5_setup'] = {
+            init: function () {
+                this.appendStatementInput("STATEMENTS")
+                    .setCheck(null)
+                    .appendField("setup");
+                this.setColour(290);
+                this.setTooltip("");
+                this.setHelpUrl("https://p5js.org/reference/#/p5/setup");
+            }
+        };
+
+        // p5 setup() コード生成の定義
+        javascript.javascriptGenerator.forBlock['p5_setup'] = function (block, generator) {
+            var statements_statements = generator.statementToCode(block, 'STATEMENTS');
+            // TODO: Assemble javascript into code variable.
+            var code = `function setup(){\n${generator.statementToCode(block, 'STATEMENTS')}}`;
+            return code;
+        };
+
+        // p5 draw() ブロックの定義
+        Blockly.Blocks['p5_draw'] = {
+            init: function () {
+                this.appendStatementInput("STATEMENTS")
+                    .setCheck(null)
+                    .appendField("draw");
+                this.setColour(290);
+                this.setTooltip("");
+                this.setHelpUrl("https://p5js.org/reference/#/p5/draw");
+            }
+        };
+
+        // p5 draw() コード生成の定義
+        javascript.javascriptGenerator.forBlock['p5_draw'] = function (block, generator) {
+            var statements_statements = generator.statementToCode(block, 'STATEMENTS');
+            // TODO: Assemble javascript into code variable.
+            var code = `function draw(){\n${generator.statementToCode(block, 'STATEMENTS')}}`;
+            return code;
+        };
+
+        // setup, drawをp5カテゴリに追加
+        for (const f of ["setup", "draw"]) {
+            let new_block = document.createElement("block");
+            new_block.setAttribute("type", `p5_${f}`);
+            p5_category.appendChild(new_block);
+        }
+
+        // Function argument blocks
+        const ARG_MAX = 4; // 最大の引数の個数
         for (let i = 2; i <= ARG_MAX; i++) {
             // Block定義
             Blockly.Blocks[`function_${i}args`] = {
@@ -668,6 +719,32 @@
             p5_category.appendChild(new_block);
         }
 
+        // 文ブロックの定義
+        Blockly.Blocks['p5_statement'] = {
+            init: function () {
+                this.appendDummyInput()
+                    .appendField(new Blockly.FieldTextInput("console.log()"), "STATEMENT")
+                    .appendField(";");
+                this.setPreviousStatement(true, null);
+                this.setNextStatement(true, null);
+                this.setColour(290);
+                this.setTooltip("");
+                this.setHelpUrl("");
+            }
+        };
+
+        // コード生成の定義
+        javascript.javascriptGenerator.forBlock[`p5_statement`] = function (block, generator) {
+            var value_name = block.getFieldValue(`STATEMENT`);
+            return `${value_name};\n`;
+        };
+
+        // p5カテゴリに追加
+        {
+            let new_block = document.createElement("block");
+            new_block.setAttribute("type", `p5_statement`);
+            p5_category.appendChild(new_block);
+        }
 
         /* TODO: Change toolbox XML ID if necessary. Can export toolbox XML from Workspace Factory. */
         var toolbox = document.getElementById("toolbox");
@@ -728,7 +805,8 @@
             const code = javascript.javascriptGenerator.workspaceToCode(workspace);
             // document.getElementById('textarea').value = code;
             // console.log(code);
-            editor.setValue(code);
+            if (editor != null)
+                editor.setValue(code);
         }
 
         workspace.addChangeListener(updateCode);
