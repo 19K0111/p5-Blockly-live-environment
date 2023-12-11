@@ -16,6 +16,7 @@
     <!-- Bootstrap -->
     <!-- <script src="bootstrap/bootstrap.min.js"></script> -->
     <script src="bootstrap-5.3.0-dist/js/bootstrap.min.js"></script>
+    <script src="bootstrap-5.3.0-dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Bootstrap core CSS -->
     <!-- <link href="bootstrap/bootstrap.min.css" rel="stylesheet"> -->
@@ -54,7 +55,7 @@
 
 <body>
     <div>
-        <ul class="nav nav-tabs">
+        <!-- <ul class="nav nav-tabs">
             <li class="nav-item"><a onclick="showBlock()" class="nav-link active" data-bs-toggle="tab"
                     role="tab">Blockly</a>
             </li>
@@ -70,6 +71,35 @@
             <li class="nav-item">
                 <a onclick="" class="nav-link" data-bs-toggle="tab" role="tab">Save</a>
             </li>
+        </ul> -->
+        <ul class="nav nav-pills" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="pills-blockly-tab" data-bs-toggle="pill"
+                    data-bs-target="#blocklyDiv" type="button" role="tab" aria-controls="blocklyDiv"
+                    aria-selected="true">Blockly</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="pills-text-tab" data-bs-toggle="pill" data-bs-target="#textDiv"
+                    type="button" role="tab" aria-controls="textDiv" aria-selected="false">Text Editor</button>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link disabled" data-bs-toggle="tab" role="tab"></a>
+            </li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button"
+                    aria-expanded="false">ファイル</a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" onclick="blocklyOpenFile()" id="f_open">開く</a></li>
+                    <li><a class="dropdown-item" onclick="blocklySaveFile(true)" id="f_save">上書き保存</a></li>
+                    <li><a class="dropdown-item" onclick="blocklySaveFile(false)" id="f_saveas">名前をつけて保存</a></li>
+                    <!-- <li><a class="dropdown-item" href="#">Something else here</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="#">Separated link</a></li> -->
+                </ul>
+            </li>
+            <li class="nav-item" role="presentation">
+                <span class="nav-link disabled" id="fileName">無題</span>
+            </li>
         </ul>
         <!-- <div class="tab-content">
             <div id="blockly" class="tab-pane active show" role="tabpanel">
@@ -77,456 +107,457 @@
             <div id="texteditor" class="tab-pane" role="tabpanel">texteditor</div>
         </div> -->
         <!-- <div id="blocklyArea"></div> -->
-        <div id="blocklyDiv" style="width:49%;height:99%; position:  absolute;"></div>
-        <div id="textDiv" style="width:49%;height:99%; position: absolute;" hidden>
-            <!-- Monaco Editor -->
-            <div id="container" style="width: 100%; height: 100vh; border: 1px solid grey; ">
+        <div class="tab-content" id="pills-tabContent">
+            <div class="tab-pane show active" id="blocklyDiv" style="width:49%;height:99%; position: absolute;"
+                role="tabpanel" aria-labelledby="pills-blockly-tab" tabindex="0"></div>
+            <div class="tab-pane" id="textDiv" style="width:49%;height:99%; position: absolute;" role="tabpanel"
+                aria-labelledby="pills-text-tab" tabindex="0">
+                <!-- Monaco Editor -->
+                <div id="container" style="width: 100%; height: 100vh; border: 1px solid grey; ">
+                </div>
+                <script src="./node_modules/monaco-editor/min/vs/loader.js"></script>
+                <script>
+                    let editor;
+                    require.config({
+                        paths: {
+                            vs: "./node_modules/monaco-editor/min/vs"
+                        },
+                        "vs/nls": {
+                            availableLanguages: { "*": "ja" }
+                        },
+                    });
+
+                    require(["vs/editor/editor.main"], function () {
+                        editor = monaco.editor.create(
+                            document.getElementById("container"),
+                            {
+                                value: [
+                                    "function setup() {",
+                                    "    ",
+                                    "}\n",
+                                    "function draw() {",
+                                    "    ",
+                                    "}\n",
+                                ].join("\n"),
+                                language: "javascript",
+                                automaticLayout: true,
+                                // readOnly: true,
+                            }
+                        );
+                        editor.getModel().onDidChangeContent((event) => {
+                            // console.log(editor.getValue());
+                            // eval("" + editor.getValue() + "_setup_();_draw_();");
+                            // execCode = new Function(getCodeBlock());
+                            // execCode();
+
+                            let iframe = document.getElementById("p5frame");
+                            let current_dir = location.href.split("/");
+                            current_dir.pop();
+                            // let header_html = `\<html\>\<head\>\<script src=\"${current_dir.join("/")}/p5/p5.min.js\"\>\<\/script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
+                            let header_html = `\<html\>\<head\>\<script src=\"https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"\>\<\/script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
+                            let footer_html = `\<\/script\>\<\/body\>\<\/html\>`;
+                            let blob = new Blob([header_html + getCodeBlock() + footer_html], { type: "text/html" });
+                            iframe.src = URL.createObjectURL(blob);
+
+                        })
+                        // editor.updateOptions({
+                        //   wordWrap: "on",
+                        // });
+                        // editor.getValue();
+                    });
+
+                    function getCodeBlock() {
+                        var data = editor.getValue().replace(/\s+\n/g, "");
+                        data = data.replace(/\s+-+/g, "\n");
+                        console.log(data);
+                        return data;
+                    };
+                </script>
             </div>
-            <script src="./node_modules/monaco-editor/min/vs/loader.js"></script>
-            <script>
-                let editor;
-                require.config({
-                    paths: {
-                        vs: "./node_modules/monaco-editor/min/vs"
-                    },
-                    "vs/nls": {
-                        availableLanguages: { "*": "ja" }
-                    },
-                });
-
-                require(["vs/editor/editor.main"], function () {
-                    editor = monaco.editor.create(
-                        document.getElementById("container"),
-                        {
-                            value: [
-                                "function setup() {",
-                                "    ",
-                                "}\n",
-                                "function draw() {",
-                                "    ",
-                                "}\n",
-                            ].join("\n"),
-                            language: "javascript",
-                            automaticLayout: true,
-                            // readOnly: true,
-                        }
-                    );
-                    editor.getModel().onDidChangeContent((event) => {
-                        // console.log(editor.getValue());
-                        // eval("" + editor.getValue() + "_setup_();_draw_();");
-                        // execCode = new Function(getCodeBlock());
-                        // execCode();
-
-                        let iframe = document.getElementById("p5frame");
-                        let current_dir = location.href.split("/");
-                        current_dir.pop();
-                        let header_html = `\<html\>\<head\>\<script src=\"${current_dir.join("/")}/p5/p5.min.js\"\>\<\/script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
-                        let footer_html = `\<\/script\>\<\/body\>\<\/html\>`;
-                        let blob = new Blob([header_html + getCodeBlock() + footer_html]);
-                        iframe.src = URL.createObjectURL(blob);
-
-                    })
-                    // editor.updateOptions({
-                    //   wordWrap: "on",
-                    // });
-                    // editor.getValue();
-                });
-
-                function getCodeBlock() {
-                    var data = editor.getValue().replace(/\s+\n/g, "");
-                    data = data.replace(/\s+-+/g, "\n");
-                    console.log(data);
-                    return data;
-                };
-            </script>
-            <script>
-                window.addEventListener("resize", function () {
-                    let container = document.getElementById("container");
-                    console.log(container);
-                    container.style.width = "100%";
-                    container.style.height = "100vh";
-                });
-            </script>
         </div>
-        <!-- Toolbox begin -->
-        <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
-            <category name="Logic" colour="#5b80a5">
-                <block type="controls_if"></block>
-                <block type="logic_compare">
-                    <field name="OP">EQ</field>
-                </block>
-                <block type="logic_operation">
-                    <field name="OP">AND</field>
-                </block>
-                <block type="logic_negate"></block>
-                <block type="logic_boolean">
-                    <field name="BOOL">TRUE</field>
-                </block>
-                <block type="logic_null"></block>
-                <block type="logic_ternary"></block>
-            </category>
-            <category name="Loops" colour="#5ba55b">
-                <block type="controls_repeat_ext">
-                    <value name="TIMES">
-                        <shadow type="math_number">
-                            <field name="NUM">10</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="controls_whileUntil">
-                    <field name="MODE">WHILE</field>
-                </block>
-                <block type="controls_for">
-                    <field name="VAR" id="lo$0^Mc-W~#wr)U8`Hu0">i</field>
-                    <value name="FROM">
-                        <shadow type="math_number">
-                            <field name="NUM">1</field>
-                        </shadow>
-                    </value>
-                    <value name="TO">
-                        <shadow type="math_number">
-                            <field name="NUM">10</field>
-                        </shadow>
-                    </value>
-                    <value name="BY">
-                        <shadow type="math_number">
-                            <field name="NUM">1</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="controls_forEach">
-                    <field name="VAR" id="e{p5`eE@oRO#}X3cVE7C">j</field>
-                </block>
-                <block type="controls_flow_statements">
-                    <field name="FLOW">BREAK</field>
-                </block>
-            </category>
-            <category name="Math" colour="#5b67a5">
-                <block type="math_number">
-                    <field name="NUM">0</field>
-                </block>
-                <!-- Added: math_expression begin-->
-                <block type="math_expression">
-                    <field name="EXPR">1+2</field>
-                </block>
-                <!-- math_expression end -->
-                <block type="math_arithmetic">
-                    <field name="OP">ADD</field>
-                    <value name="A">
-                        <shadow type="math_number">
-                            <field name="NUM">1</field>
-                        </shadow>
-                    </value>
-                    <value name="B">
-                        <shadow type="math_number">
-                            <field name="NUM">1</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="math_single">
-                    <field name="OP">ROOT</field>
-                    <value name="NUM">
-                        <shadow type="math_number">
-                            <field name="NUM">9</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="math_trig">
-                    <field name="OP">SIN</field>
-                    <value name="NUM">
-                        <shadow type="math_number">
-                            <field name="NUM">45</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="math_constant">
-                    <field name="CONSTANT">PI</field>
-                </block>
-                <block type="math_number_property">
-                    <mutation divisor_input="false"></mutation>
-                    <field name="PROPERTY">EVEN</field>
-                    <value name="NUMBER_TO_CHECK">
-                        <shadow type="math_number">
-                            <field name="NUM">0</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="math_round">
-                    <field name="OP">ROUND</field>
-                    <value name="NUM">
-                        <shadow type="math_number">
-                            <field name="NUM">3.1</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="math_on_list">
-                    <mutation op="SUM"></mutation>
-                    <field name="OP">SUM</field>
-                </block>
-                <block type="math_modulo">
-                    <value name="DIVIDEND">
-                        <shadow type="math_number">
-                            <field name="NUM">64</field>
-                        </shadow>
-                    </value>
-                    <value name="DIVISOR">
-                        <shadow type="math_number">
-                            <field name="NUM">10</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="math_constrain">
-                    <value name="VALUE">
-                        <shadow type="math_number">
-                            <field name="NUM">50</field>
-                        </shadow>
-                    </value>
-                    <value name="LOW">
-                        <shadow type="math_number">
-                            <field name="NUM">1</field>
-                        </shadow>
-                    </value>
-                    <value name="HIGH">
-                        <shadow type="math_number">
-                            <field name="NUM">100</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="math_random_int">
-                    <value name="FROM">
-                        <shadow type="math_number">
-                            <field name="NUM">1</field>
-                        </shadow>
-                    </value>
-                    <value name="TO">
-                        <shadow type="math_number">
-                            <field name="NUM">100</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="math_random_float"></block>
-            </category>
-            <category name="Text" colour="#5ba58c">
-                <block type="text">
-                    <field name="TEXT"></field>
-                </block>
-                <block type="text_join">
-                    <mutation items="2"></mutation>
-                </block>
-                <block type="text_append">
-                    <field name="VAR" id="#!(lOF)W=E=49?.$MR}~">item</field>
-                    <value name="TEXT">
-                        <shadow type="text">
-                            <field name="TEXT"></field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="text_length">
-                    <value name="VALUE">
-                        <shadow type="text">
-                            <field name="TEXT">abc</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="text_isEmpty">
-                    <value name="VALUE">
-                        <shadow type="text">
-                            <field name="TEXT"></field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="text_indexOf">
-                    <field name="END">FIRST</field>
-                    <value name="VALUE">
-                        <block type="variables_get">
-                            <field name="VAR" id="O%gT8f4h*!^.iaWvd/nB">text</field>
-                        </block>
-                    </value>
-                    <value name="FIND">
-                        <shadow type="text">
-                            <field name="TEXT">abc</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="text_charAt">
-                    <mutation at="true"></mutation>
-                    <field name="WHERE">FROM_START</field>
-                    <value name="VALUE">
-                        <block type="variables_get">
-                            <field name="VAR" id="O%gT8f4h*!^.iaWvd/nB">text</field>
-                        </block>
-                    </value>
-                </block>
-                <block type="text_getSubstring">
-                    <mutation at1="true" at2="true"></mutation>
-                    <field name="WHERE1">FROM_START</field>
-                    <field name="WHERE2">FROM_START</field>
-                    <value name="STRING">
-                        <block type="variables_get">
-                            <field name="VAR" id="O%gT8f4h*!^.iaWvd/nB">text</field>
-                        </block>
-                    </value>
-                </block>
-                <block type="text_changeCase">
-                    <field name="CASE">UPPERCASE</field>
-                    <value name="TEXT">
-                        <shadow type="text">
-                            <field name="TEXT">abc</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="text_trim">
-                    <field name="MODE">BOTH</field>
-                    <value name="TEXT">
-                        <shadow type="text">
-                            <field name="TEXT">abc</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="text_print">
-                    <value name="TEXT">
-                        <shadow type="text">
-                            <field name="TEXT">abc</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="text_prompt_ext">
-                    <mutation type="TEXT"></mutation>
-                    <field name="TYPE">TEXT</field>
-                    <value name="TEXT">
-                        <shadow type="text">
-                            <field name="TEXT">abc</field>
-                        </shadow>
-                    </value>
-                </block>
-            </category>
-            <category name="Lists" colour="#745ba5">
-                <block type="lists_create_with">
-                    <mutation items="0"></mutation>
-                </block>
-                <block type="lists_create_with">
-                    <mutation items="3"></mutation>
-                </block>
-                <block type="lists_repeat">
-                    <value name="NUM">
-                        <shadow type="math_number">
-                            <field name="NUM">5</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="lists_length"></block>
-                <block type="lists_isEmpty"></block>
-                <block type="lists_indexOf">
-                    <field name="END">FIRST</field>
-                    <value name="VALUE">
-                        <block type="variables_get">
-                            <field name="VAR" id="hB$Xj{VoHXX)R=OPUf$b">list</field>
-                        </block>
-                    </value>
-                </block>
-                <block type="lists_getIndex">
-                    <mutation statement="false" at="true"></mutation>
-                    <field name="MODE">GET</field>
-                    <field name="WHERE">FROM_START</field>
-                    <value name="VALUE">
-                        <block type="variables_get">
-                            <field name="VAR" id="hB$Xj{VoHXX)R=OPUf$b">list</field>
-                        </block>
-                    </value>
-                </block>
-                <block type="lists_setIndex">
-                    <mutation at="true"></mutation>
-                    <field name="MODE">SET</field>
-                    <field name="WHERE">FROM_START</field>
-                    <value name="LIST">
-                        <block type="variables_get">
-                            <field name="VAR" id="hB$Xj{VoHXX)R=OPUf$b">list</field>
-                        </block>
-                    </value>
-                </block>
-                <block type="lists_getSublist">
-                    <mutation at1="true" at2="true"></mutation>
-                    <field name="WHERE1">FROM_START</field>
-                    <field name="WHERE2">FROM_START</field>
-                    <value name="LIST">
-                        <block type="variables_get">
-                            <field name="VAR" id="hB$Xj{VoHXX)R=OPUf$b">list</field>
-                        </block>
-                    </value>
-                </block>
-                <block type="lists_split">
-                    <mutation mode="SPLIT"></mutation>
-                    <field name="MODE">SPLIT</field>
-                    <value name="DELIM">
-                        <shadow type="text">
-                            <field name="TEXT">,</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="lists_sort">
-                    <field name="TYPE">NUMERIC</field>
-                    <field name="DIRECTION">1</field>
-                </block>
-            </category>
-            <category name="Color" colour="#a5745b">
-                <block type="colour_picker">
-                    <field name="COLOUR">#ff0000</field>
-                </block>
-                <block type="colour_random"></block>
-                <block type="colour_rgb">
-                    <value name="RED">
-                        <shadow type="math_number">
-                            <field name="NUM">100</field>
-                        </shadow>
-                    </value>
-                    <value name="GREEN">
-                        <shadow type="math_number">
-                            <field name="NUM">50</field>
-                        </shadow>
-                    </value>
-                    <value name="BLUE">
-                        <shadow type="math_number">
-                            <field name="NUM">0</field>
-                        </shadow>
-                    </value>
-                </block>
-                <block type="colour_blend">
-                    <value name="COLOUR1">
-                        <shadow type="colour_picker">
-                            <field name="COLOUR">#ff0000</field>
-                        </shadow>
-                    </value>
-                    <value name="COLOUR2">
-                        <shadow type="colour_picker">
-                            <field name="COLOUR">#3333ff</field>
-                        </shadow>
-                    </value>
-                    <value name="RATIO">
-                        <shadow type="math_number">
-                            <field name="NUM">0.5</field>
-                        </shadow>
-                    </value>
-                </block>
-            </category>
-            <sep></sep>
-            <category name="Variables" colour="#a55b80" custom="VARIABLE"></category>
-            <category name="Functions" colour="#995ba5" custom="PROCEDURE" id="function_category"></category>
-            <sep></sep>
-            <category name="p5.js" colour="#ed225e" id="p5_category"></category>
-        </xml>
-        <xml id="startBlocks" style="display: none;">
-            <!-- ページを開いたときに配置させるブロック -->
-            <!-- <block type="math_expression" x="0" y="0">
+
+        <!-- <div id="blocklyDiv" style="width:49%;height:99%; position:  absolute;"></div>
+        <div id="textDiv" style="width:49%;height:99%; position: absolute;" hidden> -->
+    </div>
+    <!-- Toolbox begin -->
+    <xml xmlns="https://developers.google.com/blockly/xml" id="toolbox" style="display: none">
+        <category name="Logic" colour="#5b80a5">
+            <block type="controls_if"></block>
+            <block type="logic_compare">
+                <field name="OP">EQ</field>
+            </block>
+            <block type="logic_operation">
+                <field name="OP">AND</field>
+            </block>
+            <block type="logic_negate"></block>
+            <block type="logic_boolean">
+                <field name="BOOL">TRUE</field>
+            </block>
+            <block type="logic_null"></block>
+            <block type="logic_ternary"></block>
+        </category>
+        <category name="Loops" colour="#5ba55b">
+            <block type="controls_repeat_ext">
+                <value name="TIMES">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="controls_whileUntil">
+                <field name="MODE">WHILE</field>
+            </block>
+            <block type="controls_for">
+                <field name="VAR" id="lo$0^Mc-W~#wr)U8`Hu0">i</field>
+                <value name="FROM">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="TO">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+                <value name="BY">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="controls_forEach">
+                <field name="VAR" id="e{p5`eE@oRO#}X3cVE7C">j</field>
+            </block>
+            <block type="controls_flow_statements">
+                <field name="FLOW">BREAK</field>
+            </block>
+        </category>
+        <category name="Math" colour="#5b67a5">
+            <block type="math_number">
+                <field name="NUM">0</field>
+            </block>
+            <!-- Added: math_expression begin-->
+            <block type="math_expression">
+                <field name="EXPR">1+2</field>
+            </block>
+            <!-- math_expression end -->
+            <block type="math_arithmetic">
+                <field name="OP">ADD</field>
+                <value name="A">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="B">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_single">
+                <field name="OP">ROOT</field>
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">9</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_trig">
+                <field name="OP">SIN</field>
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">45</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_constant">
+                <field name="CONSTANT">PI</field>
+            </block>
+            <block type="math_number_property">
+                <mutation divisor_input="false"></mutation>
+                <field name="PROPERTY">EVEN</field>
+                <value name="NUMBER_TO_CHECK">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_round">
+                <field name="OP">ROUND</field>
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">3.1</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_on_list">
+                <mutation op="SUM"></mutation>
+                <field name="OP">SUM</field>
+            </block>
+            <block type="math_modulo">
+                <value name="DIVIDEND">
+                    <shadow type="math_number">
+                        <field name="NUM">64</field>
+                    </shadow>
+                </value>
+                <value name="DIVISOR">
+                    <shadow type="math_number">
+                        <field name="NUM">10</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_constrain">
+                <value name="VALUE">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+                <value name="LOW">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="HIGH">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_random_int">
+                <value name="FROM">
+                    <shadow type="math_number">
+                        <field name="NUM">1</field>
+                    </shadow>
+                </value>
+                <value name="TO">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="math_random_float"></block>
+        </category>
+        <category name="Text" colour="#5ba58c">
+            <block type="text">
+                <field name="TEXT"></field>
+            </block>
+            <block type="text_join">
+                <mutation items="2"></mutation>
+            </block>
+            <block type="text_append">
+                <field name="VAR" id="#!(lOF)W=E=49?.$MR}~">item</field>
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_length">
+                <value name="VALUE">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_isEmpty">
+                <value name="VALUE">
+                    <shadow type="text">
+                        <field name="TEXT"></field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_indexOf">
+                <field name="END">FIRST</field>
+                <value name="VALUE">
+                    <block type="variables_get">
+                        <field name="VAR" id="O%gT8f4h*!^.iaWvd/nB">text</field>
+                    </block>
+                </value>
+                <value name="FIND">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_charAt">
+                <mutation at="true"></mutation>
+                <field name="WHERE">FROM_START</field>
+                <value name="VALUE">
+                    <block type="variables_get">
+                        <field name="VAR" id="O%gT8f4h*!^.iaWvd/nB">text</field>
+                    </block>
+                </value>
+            </block>
+            <block type="text_getSubstring">
+                <mutation at1="true" at2="true"></mutation>
+                <field name="WHERE1">FROM_START</field>
+                <field name="WHERE2">FROM_START</field>
+                <value name="STRING">
+                    <block type="variables_get">
+                        <field name="VAR" id="O%gT8f4h*!^.iaWvd/nB">text</field>
+                    </block>
+                </value>
+            </block>
+            <block type="text_changeCase">
+                <field name="CASE">UPPERCASE</field>
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_trim">
+                <field name="MODE">BOTH</field>
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_print">
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="text_prompt_ext">
+                <mutation type="TEXT"></mutation>
+                <field name="TYPE">TEXT</field>
+                <value name="TEXT">
+                    <shadow type="text">
+                        <field name="TEXT">abc</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+        <category name="Lists" colour="#745ba5">
+            <block type="lists_create_with">
+                <mutation items="0"></mutation>
+            </block>
+            <block type="lists_create_with">
+                <mutation items="3"></mutation>
+            </block>
+            <block type="lists_repeat">
+                <value name="NUM">
+                    <shadow type="math_number">
+                        <field name="NUM">5</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="lists_length"></block>
+            <block type="lists_isEmpty"></block>
+            <block type="lists_indexOf">
+                <field name="END">FIRST</field>
+                <value name="VALUE">
+                    <block type="variables_get">
+                        <field name="VAR" id="hB$Xj{VoHXX)R=OPUf$b">list</field>
+                    </block>
+                </value>
+            </block>
+            <block type="lists_getIndex">
+                <mutation statement="false" at="true"></mutation>
+                <field name="MODE">GET</field>
+                <field name="WHERE">FROM_START</field>
+                <value name="VALUE">
+                    <block type="variables_get">
+                        <field name="VAR" id="hB$Xj{VoHXX)R=OPUf$b">list</field>
+                    </block>
+                </value>
+            </block>
+            <block type="lists_setIndex">
+                <mutation at="true"></mutation>
+                <field name="MODE">SET</field>
+                <field name="WHERE">FROM_START</field>
+                <value name="LIST">
+                    <block type="variables_get">
+                        <field name="VAR" id="hB$Xj{VoHXX)R=OPUf$b">list</field>
+                    </block>
+                </value>
+            </block>
+            <block type="lists_getSublist">
+                <mutation at1="true" at2="true"></mutation>
+                <field name="WHERE1">FROM_START</field>
+                <field name="WHERE2">FROM_START</field>
+                <value name="LIST">
+                    <block type="variables_get">
+                        <field name="VAR" id="hB$Xj{VoHXX)R=OPUf$b">list</field>
+                    </block>
+                </value>
+            </block>
+            <block type="lists_split">
+                <mutation mode="SPLIT"></mutation>
+                <field name="MODE">SPLIT</field>
+                <value name="DELIM">
+                    <shadow type="text">
+                        <field name="TEXT">,</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="lists_sort">
+                <field name="TYPE">NUMERIC</field>
+                <field name="DIRECTION">1</field>
+            </block>
+        </category>
+        <category name="Color" colour="#a5745b">
+            <block type="colour_picker">
+                <field name="COLOUR">#ff0000</field>
+            </block>
+            <block type="colour_random"></block>
+            <block type="colour_rgb">
+                <value name="RED">
+                    <shadow type="math_number">
+                        <field name="NUM">100</field>
+                    </shadow>
+                </value>
+                <value name="GREEN">
+                    <shadow type="math_number">
+                        <field name="NUM">50</field>
+                    </shadow>
+                </value>
+                <value name="BLUE">
+                    <shadow type="math_number">
+                        <field name="NUM">0</field>
+                    </shadow>
+                </value>
+            </block>
+            <block type="colour_blend">
+                <value name="COLOUR1">
+                    <shadow type="colour_picker">
+                        <field name="COLOUR">#ff0000</field>
+                    </shadow>
+                </value>
+                <value name="COLOUR2">
+                    <shadow type="colour_picker">
+                        <field name="COLOUR">#3333ff</field>
+                    </shadow>
+                </value>
+                <value name="RATIO">
+                    <shadow type="math_number">
+                        <field name="NUM">0.5</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+        <sep></sep>
+        <category name="Variables" colour="#a55b80" custom="VARIABLE"></category>
+        <category name="Functions" colour="#995ba5" custom="PROCEDURE" id="function_category"></category>
+        <sep></sep>
+        <category name="p5.js" colour="#ed225e" id="p5_category"></category>
+    </xml>
+    <xml id="startBlocks" style="display: none;">
+        <!-- ページを開いたときに配置させるブロック -->
+        <!-- <block type="math_expression" x="0" y="0">
                 <field name="EXPR">1+2</field>
             </block> -->
-            <block type="p5_setup" x="20" y="20"></block>
-            <block type="p5_draw" x="20" y="120"></block>
-        </xml>
-        <!-- Toolbox end -->
-        <div id="p5Preview">
-            <span>p5.js preview</span>
-            <iframe id="p5frame" frameborder="0" style="width: 100%;height: 94%;"></iframe>
-            <!-- <main></main>
+        <block type="p5_setup" x="20" y="20"></block>
+        <block type="p5_draw" x="20" y="120"></block>
+    </xml>
+    <!-- Toolbox end -->
+    <div id="p5Preview">
+        <span>p5.js preview</span>
+        <iframe id="p5frame" frameborder="0" style="width: 100%;height: 94%;"></iframe>
+        <!-- <main></main>
             <script>
                 let canvas = null;
                 let x = 0;
@@ -547,7 +578,6 @@
                 }
 
             </script> -->
-        </div>
     </div>
     <script>
         // type math_expression: 
@@ -813,6 +843,14 @@
             if (workspace.isDragging()) return; // Don't update while changes are happening.
             if (!supportedEvents.has(event.type)) return;
 
+            const currentXML = Blockly.Xml.workspaceToDom(workspace);
+            if (title != undefined) {
+                if (Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace)) != Blockly.Xml.domToText(loadedXml)) {
+                    document.getElementById("fileName").innerText = title + "*";
+                } else {
+                    document.getElementById("fileName").innerText = title;
+                }
+            }
             const code = javascript.javascriptGenerator.workspaceToCode(workspace);
             // document.getElementById('textarea').value = code;
             // console.log(code);
@@ -836,8 +874,147 @@
             blocklyContent.hidden = true;
             textContent.hidden = false;
         }
+
+        let loadedXml;
+        let title;
+        async function blocklyOpenFile() {
+            // Supports Chrome or Edge (Firefox and Safari are not supported)
+            const options = {
+                types: [
+                    {
+                        description: "Text Files",
+                        accept: {
+                            "text/plain": [".blk", ".xml"],
+                        },
+                    },
+                ],
+            };
+
+            const handle = await window.showOpenFilePicker(options);
+            const file = await handle[0].getFile();
+            title = handle[0].name;
+            document.getElementById("fileName").innerText = title;
+            const text = await file.text();
+            console.log(text); // 内容を出力
+
+            loadedXml = Blockly.utils.xml.textToDom(text);
+            workspace.clear();
+            Blockly.Xml.domToWorkspace(loadedXml, workspace);
+        }
+
+        let globalHandle;
+        // 書き込み処理
+        async function writeFile(fileHandle, contents) {
+            // writable作成
+            const writable = await fileHandle.createWritable();
+
+            // コンテンツを書き込む
+            await writable.write(contents);
+
+            // ファイル閉じる
+            await writable.close();
+        }
+
+        async function blocklySaveFile(isOverWrite) {
+            // メイン処理false
+            const saveFileOptions = {
+                types: [
+                    {
+                        description: "Text Files",
+                        accept: {
+                            "text/plain": [".blk", ".xml"],
+                        },
+                    },
+                ],
+            };
+            if (isOverWrite) {
+                let xml = Blockly.Xml.workspaceToDom(workspace);
+                /* 上書き保存（初回はglobalHandleがundefinedなので[名前をつけて保存]を実行）*/
+                globalHandle = await saveFile(Blockly.Xml.domToText(xml), globalHandle, saveFileOptions);
+            } else {
+                let xml = Blockly.Xml.workspaceToDom(workspace);
+                /* 名前を付けて保存 */
+                globalHandle = await saveFile(Blockly.Xml.domToText(xml), null);
+            }
+            console.log('書き込み完了');
+            loadedXml = xml;
+        }
+
+        // 上書き保存
+        async function saveFile(contents, handle, options) {
+            if (!handle) {
+                handle = await window.showSaveFilePicker(options);
+                title = handle[0].name;
+                document.getElementById("fileName").innerText = title;
+            }
+            await writeFile(handle, contents);
+            return handle;
+        }
     </script>
 
+    <script>
+        window.addEventListener("DOMContentLoaded", event => {
+            if (navigator.userAgent.toLowerCase().includes("mac")) {
+                // MacOS
+                document.getElementById("f_open").innerText += ` (${String.fromCodePoint(0x2318)} O)`;
+                document.getElementById("f_save").innerText += ` (${String.fromCodePoint(0x2318)} S)`;
+                document.getElementById("f_saveas").innerText += ` (${String.fromCodePoint(0x21e7)} ${String.fromCodePoint(0x2318)} S)`;
+            } else {
+                // MacOS以外
+                document.getElementById("f_open").innerText += "(Ctrl + O)";
+                document.getElementById("f_save").innerText += "(Ctrl + S)";
+                document.getElementById("f_saveas").innerText += "(Ctrl + Shift + S)";
+            }
+        });
+
+        window.addEventListener("resize", function () {
+            let container = document.getElementById("container");
+            console.log(container);
+            container.style.width = "100%";
+            container.style.height = "100vh";
+
+            // テキストタブにしてウィンドウサイズを変えると、ブロックタブに戻ったときに描画されない問題を修正
+            let tmpXml = Blockly.Xml.workspaceToDom(workspace);
+            workspace.clear();
+            Blockly.Xml.domToWorkspace(loadedXml, workspace);
+        });
+
+        window.addEventListener("keydown", event => {
+            if (navigator.userAgent.toLowerCase().includes("mac")) {
+                // MacOS
+                console.log("mac");
+                if (event.metaKey) {
+                    if (event.code === "KeyO") {
+                        console.log("cmd O");
+                        event.preventDefault(); // ブラウザに定義済みのキーショートカットを呼び出さない
+                        blocklyOpenFile()
+                    } else if (event.shiftKey && event.code === "KeyS") {
+                        console.log("cmd shift S");
+                        event.preventDefault();
+                        blocklySaveFile(false);
+                    } else if (event.code === "KeyS") {
+                        console.log("cmd S");
+                        event.preventDefault();
+                        blocklySaveFile(true);
+                    }
+                }
+            } else {
+                // MacOS以外
+                if (event.ctrlKey) {
+                    if (event.code === "KeyO") {
+                        event.preventDefault();
+                        blocklyOpenFile()
+                    } else if (event.shiftKey && event.code === "KeyS") {
+                        event.preventDefault();
+                        blocklySaveFile(false);
+                    } else if (event.code === "KeyS") {
+                        event.preventDefault();
+                        blocklySaveFile(true);
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>
