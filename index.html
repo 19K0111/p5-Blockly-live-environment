@@ -90,6 +90,7 @@
                     aria-expanded="false">ファイル</a>
                 <ul class="dropdown-menu"
                     style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">
+                    <li><a class="dropdown-item" onclick="blocklyNewFile()" id="f_new">新規</a></li>
                     <li><a class="dropdown-item" onclick="blocklyOpenFile()" id="f_open">開く</a></li>
                     <li><a class="dropdown-item" onclick="blocklySaveFile(true)" id="f_save">上書き保存</a></li>
                     <li><a class="dropdown-item" onclick="blocklySaveFile(false)" id="f_saveas">名前をつけて保存</a></li>
@@ -580,6 +581,28 @@
 
             </script> -->
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="saveRemindModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="staticBackdropLabel">p5.js Live Environment</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    保存していない内容は失われますがよろしいですか？
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="button" class="btn btn-primary"
+                        onclick='document.getElementById("fileName").innerText=title;blocklyNewFile();'
+                        data-bs-dismiss="modal">はい</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <script>
         // type math_expression: 
         Blockly.Blocks['math_expression'] = {
@@ -845,7 +868,16 @@
             if (!supportedEvents.has(event.type)) return;
 
             const currentXML = Blockly.Xml.workspaceToDom(workspace);
-            if (title != undefined) {
+            if (loadedXml == undefined) {
+                loadedXml = Blockly.Xml.workspaceToDom(workspace);
+            }
+            if (title == undefined) {
+                if (Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace)) != Blockly.Xml.domToText(loadedXml)) {
+                    document.getElementById("fileName").innerText = untitled + "*";
+                } else {
+                    document.getElementById("fileName").innerText = untitled;
+                }
+            } else {
                 if (Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspace)) != Blockly.Xml.domToText(loadedXml)) {
                     document.getElementById("fileName").innerText = title + "*";
                 } else {
@@ -876,6 +908,7 @@
             textContent.hidden = false;
         }
 
+        const untitled = "無題";
         let loadedXml;
         let title;
         async function blocklyOpenFile() {
@@ -921,9 +954,9 @@
             const saveFileOptions = {
                 types: [
                     {
-                        description: "Text Files",
+                        description: "Block Files",
                         accept: {
-                            "text/plain": [".blk", ".xml"],
+                            "text/xml": [".blk", ".xml"],
                         },
                     },
                 ],
@@ -932,24 +965,46 @@
                 let xml = Blockly.Xml.workspaceToDom(workspace);
                 /* 上書き保存（初回はglobalHandleがundefinedなので[名前をつけて保存]を実行）*/
                 globalHandle = await saveFile(Blockly.Xml.domToText(xml), globalHandle, saveFileOptions);
+                loadedXml = xml;
             } else {
                 let xml = Blockly.Xml.workspaceToDom(workspace);
                 /* 名前を付けて保存 */
-                globalHandle = await saveFile(Blockly.Xml.domToText(xml), null);
+                globalHandle = await saveFile(Blockly.Xml.domToText(xml), null, saveFileOptions);
+                loadedXml = xml;
             }
             console.log('書き込み完了');
-            loadedXml = xml;
         }
 
         // 上書き保存
         async function saveFile(contents, handle, options) {
             if (!handle) {
                 handle = await window.showSaveFilePicker(options);
-                title = handle[0].name;
-                document.getElementById("fileName").innerText = title;
+                title = handle.name;
             }
+            document.getElementById("fileName").innerText = title;
             await writeFile(handle, contents);
             return handle;
+        }
+
+        function openModal(id) {
+
+        }
+
+        function blocklyNewFile() {
+            // ダイアログ
+            const modal = new bootstrap.Modal(document.getElementById("saveRemindModal"));
+            if (document.getElementById("fileName").innerText.includes("*")) {
+                modal.show();
+                return;
+            }
+            modal.hide();
+
+            workspace.clear();
+            Blockly.Xml.domToWorkspace(document.getElementById("startBlocks"), workspace);
+            loadedXml = undefined;
+            title = untitled;
+            document.getElementById("fileName").innerText = untitled;
+            globalHandle = undefined;
         }
     </script>
 
@@ -957,14 +1012,16 @@
         window.addEventListener("DOMContentLoaded", event => {
             if (navigator.userAgent.toLowerCase().includes("mac")) {
                 // MacOS
-                document.getElementById("f_open").innerText += ` (${String.fromCodePoint(0x2318)} O)`;
-                document.getElementById("f_save").innerText += ` (${String.fromCodePoint(0x2318)} S)`;
-                document.getElementById("f_saveas").innerText += ` (${String.fromCodePoint(0x21e7)} ${String.fromCodePoint(0x2318)} S)`;
+                document.getElementById("f_new").innerText += ` (${String.fromCodePoint(0x2303)}${String.fromCodePoint(0x2325)}${String.fromCodePoint(0x2318)} N)`; // control + option + command + N
+                document.getElementById("f_open").innerText += ` (${String.fromCodePoint(0x2318)}O)`;
+                document.getElementById("f_save").innerText += ` (${String.fromCodePoint(0x2318)}S)`;
+                document.getElementById("f_saveas").innerText += ` (${String.fromCodePoint(0x21e7)}${String.fromCodePoint(0x2318)}S)`;
             } else {
                 // MacOS以外
-                document.getElementById("f_open").innerText += "(Ctrl + O)";
-                document.getElementById("f_save").innerText += "(Ctrl + S)";
-                document.getElementById("f_saveas").innerText += "(Ctrl + Shift + S)";
+                document.getElementById("f_new").innerText += " (Ctrl+N)";
+                document.getElementById("f_open").innerText += " (Ctrl+O)";
+                document.getElementById("f_save").innerText += " (Ctrl+S)";
+                document.getElementById("f_saveas").innerText += " (Ctrl+Shift+S)";
             }
         });
 
@@ -997,6 +1054,10 @@
                         console.log("cmd S");
                         event.preventDefault();
                         blocklySaveFile(true);
+                    } else if (event.ctrlKey && event.altKey && event.code === "KeyN") {
+                        console.log("control option command N");
+                        event.preventDefault();
+                        blocklyNewFile();
                     }
                 }
             } else {
@@ -1011,6 +1072,9 @@
                     } else if (event.code === "KeyS") {
                         event.preventDefault();
                         blocklySaveFile(true);
+                    } else if (event.code === "KeyN") {
+                        event.preventDefault();
+                        blocklyNewFile();
                     }
                 }
             }
