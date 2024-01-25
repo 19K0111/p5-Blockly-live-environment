@@ -13,10 +13,14 @@
 
     <!-- p5.js -->
     <script src="p5/p5.min.js"></script>
+    <script src="p5/addons/p5.sound.min.js"></script>
     <!-- Bootstrap -->
     <!-- <script src="bootstrap/bootstrap.min.js"></script> -->
     <script src="bootstrap-5.3.0-dist/js/bootstrap.min.js"></script>
     <script src="bootstrap-5.3.0-dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- ローカル等でサーバを構築する必要があるモジュール -->
+    <script src="main.js"></script>
 
     <!-- Bootstrap core CSS -->
     <!-- <link href="bootstrap/bootstrap.min.css" rel="stylesheet"> -->
@@ -156,7 +160,7 @@
                             let current_dir = location.href.split("/");
                             current_dir.pop();
                             // let header_html = `\<html\>\<head\>\<script src=\"${current_dir.join("/")}/p5/p5.min.js\"\>\<\/script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
-                            let header_html = `\<html\>\<head\>\<script src=\"https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"\>\<\/script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
+                            let header_html = `\<html\>\<head\>\<script src=\"https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"\>\<\/script\>\<script src=\"https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"\>\<\/script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
                             let footer_html = `\<\/script\>\<\/body\>\<\/html\>`;
                             let blob = new Blob([header_html + getCodeBlock() + footer_html], { type: "text/html" });
                             iframe.src = URL.createObjectURL(blob);
@@ -604,6 +608,7 @@
         </div>
     </div>
     <script>
+
         // type math_expression: 
         Blockly.Blocks['math_expression'] = {
             init: function () {
@@ -733,30 +738,30 @@
             p5_category.appendChild(new_block);
         }
 
-        // test for p5 block
-        let functions = ["fill", "rect", "ellipse", "line"]
-        for (const f of functions) {
-            // リストにあるp5の関数ブロックの定義
-            Blockly.Blocks[`p5_${f}`] = {
+        function createFunctionBlock(class_instance, identifier, args) {
+            // 関数ブロックの定義
+            Blockly.Blocks[`p5_${class_instance}_${identifier}`] = {
                 init: function () {
                     this.appendValueInput("ARGS")
                         .setCheck(null)
-                        .appendField(`${f}(`);
+                        .appendField(`${identifier}(`);
+                    // 引数の個数だけ処理をする
+
                     this.appendEndRowInput()
                         .appendField(")");
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour(290);
                     this.setTooltip("");
-                    this.setHelpUrl(`https://p5js.org/reference/#/p5/${f}`);
+                    this.setHelpUrl(`https://p5js.org/reference/#/${class_instance}/${identifier}`);
                 }
             };
 
             // コード生成の定義
-            javascript.javascriptGenerator.forBlock[`p5_${f}`] = function (block, generator) {
+            javascript.javascriptGenerator.forBlock[`p5_${class_instance}_${identifier}`] = function (block, generator) {
                 var value_name = generator.valueToCode(block, `ARGS`.toUpperCase(), javascript.Order.NONE); // ex. (10, 20, 30, 40): if Order.ATOMIC, 10, 20, 30, 40: if Order.NONE
                 // var code = block.getFieldValue(`${f}`.toUpperCase()); 
-                return `${f}(${value_name});\n`;
+                return `${identifier}(${value_name});\n`;
             };
 
             // id="p5_category"に<block>を動的に追加する処理
@@ -770,7 +775,7 @@
             </block>
             */
             let new_block = document.createElement("block");
-            new_block.setAttribute("type", `p5_${f}`);
+            new_block.setAttribute("type", `p5_${class_instance}_${identifier}`);
             let block_value = document.createElement("value");
             block_value.setAttribute("name", "ARGS");
             let block_value_shadow = document.createElement("shadow");
@@ -782,7 +787,59 @@
             block_value.appendChild(block_value_shadow);
             new_block.appendChild(block_value);
             p5_category.appendChild(new_block);
+
         }
+
+        // test for p5 block
+        // let functions = ["fill", "rect", "ellipse", "line"]
+        // for (const f of functions) {
+        //     // リストにあるp5の関数ブロックの定義
+        //     Blockly.Blocks[`p5_${f}`] = {
+        //         init: function () {
+        //             this.appendValueInput("ARGS")
+        //                 .setCheck(null)
+        //                 .appendField(`${f}(`);
+        //             this.appendEndRowInput()
+        //                 .appendField(")");
+        //             this.setPreviousStatement(true, null);
+        //             this.setNextStatement(true, null);
+        //             this.setColour(290);
+        //             this.setTooltip("");
+        //             this.setHelpUrl(`https://p5js.org/reference/#/p5/${f}`);
+        //         }
+        //     };
+
+        //     // コード生成の定義
+        //     javascript.javascriptGenerator.forBlock[`p5_${f}`] = function (block, generator) {
+        //         var value_name = generator.valueToCode(block, `ARGS`.toUpperCase(), javascript.Order.NONE); // ex. (10, 20, 30, 40): if Order.ATOMIC, 10, 20, 30, 40: if Order.NONE
+        //         // var code = block.getFieldValue(`${f}`.toUpperCase()); 
+        //         return `${f}(${value_name});\n`;
+        //     };
+
+        //     // id="p5_category"に<block>を動的に追加する処理
+        //     /*
+        //     <block type="p5_xxx">
+        //         <value name="ARGS">
+        //             <shadow type="math_expression">
+        //                 <field name="EXPR">0</field>
+        //             </shadow>
+        //         </value>
+        //     </block>
+        //     */
+        //     let new_block = document.createElement("block");
+        //     new_block.setAttribute("type", `p5_${f}`);
+        //     let block_value = document.createElement("value");
+        //     block_value.setAttribute("name", "ARGS");
+        //     let block_value_shadow = document.createElement("shadow");
+        //     block_value_shadow.setAttribute("type", "math_expression");
+        //     let block_value_shadow_field = document.createElement("field");
+        //     block_value_shadow_field.setAttribute("name", "EXPR");
+        //     block_value_shadow_field.textContent = "0";
+        //     block_value_shadow.appendChild(block_value_shadow_field);
+        //     block_value.appendChild(block_value_shadow);
+        //     new_block.appendChild(block_value);
+        //     p5_category.appendChild(new_block);
+        // }
 
         // 文ブロックの定義
         Blockly.Blocks['p5_statement'] = {
@@ -809,6 +866,115 @@
             let new_block = document.createElement("block");
             new_block.setAttribute("type", `p5_statement`);
             p5_category.appendChild(new_block);
+        }
+
+
+        let p5_raw = undefined;
+        {
+            // JSON import
+            // XMLHttpRequestを使ってjsonデータを読み込む
+            let requestURL = 'p5/p5-all-functions.json';//jsonへのパス
+            let request = new XMLHttpRequest();
+            request.open('GET', requestURL);
+            request.responseType = 'json';
+            request.send();
+
+            // JSONデータをJavaScriptオブジェクトに変換
+            request.onload = function () {
+                let data = request.response;
+                data = JSON.parse(JSON.stringify(data));
+                p5_raw = data;
+                console.log(data)
+                for (const e1 in p5_raw) {
+                    try {
+                        let class_instance = new window[e1]();
+                        for (const e2 in p5_raw[e1]) {
+                            if (p5_raw[e1][e2]["module"] !== "Foundation") {
+                                // console.log(`${e1}.${e2}`);
+                                let identifier = class_instance[e2]
+                                if (typeof identifier === "function") {
+                                    // 関数
+                                    if (p5_raw[e1][e2]["params"] !== undefined) {
+                                        // オーバーロードなし
+                                        createFunctionBlock(e1, e2, p5_raw[e1][e2]["params"]);
+                                    } else if (p5_raw[e1][e2]["overloads"] !== undefined) {
+                                        // オーバーロードあり
+                                        for (let i = 0; i < p5_raw[e1][e2]["overloads"].length; i++) {
+                                            createFunctionBlock(e1, e2, p5_raw[e1][e2]["overloads"][i].params);
+                                        }
+                                    }
+                                } else {
+                                    // 変数
+
+                                }
+                            } else if (p5_raw[e1][e2]["module"] !== "Constants") {
+                                // 定数
+
+                            }
+                        }
+                    } catch (error) {
+                        try {
+                            if (e1 === "JSON" || e1 === "console") {
+                                continue;
+                            } else {
+                                // p5.XXX の場合
+                                let l = e1.split(".");
+                                let class_instance = null;
+                                class_instance = new window[l[0]][l[1]]();
+
+                                if (l[1] === "Color") {
+                                    // p5.Color
+                                    class_instance = color(0);
+                                } else if (l[1] === "Element") {
+                                    // p5.Element
+                                } else if (l[1] === "Graphics") {
+                                    // p5.Graphics
+                                } else if (l[1] === "MediaElement") {
+                                    // p5.MediaElement
+                                } else if (l[1] === "File") {
+                                    // p5.File
+                                } else if (l[1] === "Framebuffer") {
+                                    // p5.Framebuffer
+                                } else if (l[1] === "Amplitude") {
+                                    // p5.Amplitude
+                                } else if (l[1] === "AudioIn") {
+                                    // p5.AudioIn
+                                } else if (l[1] === "SoundRecorder") {
+                                    // p5.SoundRecorder
+                                }
+
+                                for (const e2 in p5_raw[e1]) {
+                                    if (e1 === "JSON" || p5_raw[e1][e2]["module"] !== "Foundation") {
+                                        // console.log(`${e1}.${e2}`);
+                                        let identifier = class_instance[e2]
+                                        if (typeof identifier === "function") {
+                                            // 関数
+                                            if (p5_raw[e1][e2]["params"] !== undefined) {
+                                                // オーバーロードなし
+                                                createFunctionBlock(e1, e2, p5_raw[e1][e2]["params"]);
+                                            } else if (p5_raw[e1][e2]["overloads"] !== undefined) {
+                                                // オーバーロードあり
+                                                for (let i = 0; i < p5_raw[e1][e2]["overloads"].length; i++) {
+                                                    createFunctionBlock(e1, e2, p5_raw[e1][e2]["overloads"][i].params);
+                                                }
+                                            }
+                                        } else {
+                                            // 変数
+
+                                        }
+                                    } else if (p5_raw[e1][e2]["module"] !== "Constants") {
+                                        // 定数
+
+                                    }
+                                }
+                            }
+                        } catch (error2) {
+                            console.error(`${e1}: ${error2}`);
+
+                        }
+                    }
+                }
+            }
         }
 
         /* TODO: Change toolbox XML ID if necessary. Can export toolbox XML from Workspace Factory. */
