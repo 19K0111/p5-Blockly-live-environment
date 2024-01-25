@@ -740,7 +740,7 @@
 
         function createFunctionBlock(class_instance, identifier, args) {
             // 関数ブロックの定義
-            Blockly.Blocks[`p5_${class_instance}_${identifier}`] = {
+            Blockly.Blocks[`${class_instance}_${identifier}`] = {
                 init: function () {
                     this.appendValueInput("ARGS")
                         .setCheck(null)
@@ -758,7 +758,7 @@
             };
 
             // コード生成の定義
-            javascript.javascriptGenerator.forBlock[`p5_${class_instance}_${identifier}`] = function (block, generator) {
+            javascript.javascriptGenerator.forBlock[`${class_instance}_${identifier}`] = function (block, generator) {
                 var value_name = generator.valueToCode(block, `ARGS`.toUpperCase(), javascript.Order.NONE); // ex. (10, 20, 30, 40): if Order.ATOMIC, 10, 20, 30, 40: if Order.NONE
                 // var code = block.getFieldValue(`${f}`.toUpperCase()); 
                 return `${identifier}(${value_name});\n`;
@@ -775,7 +775,7 @@
             </block>
             */
             let new_block = document.createElement("block");
-            new_block.setAttribute("type", `p5_${class_instance}_${identifier}`);
+            new_block.setAttribute("type", `${class_instance}_${identifier}`);
             let block_value = document.createElement("value");
             block_value.setAttribute("name", "ARGS");
             let block_value_shadow = document.createElement("shadow");
@@ -792,6 +792,9 @@
 
         // test for p5 block
         // let functions = ["fill", "rect", "ellipse", "line"]
+        // for (const f of functions) {
+        //     createFunctionBlock("p5", f, null);
+        // }
         // for (const f of functions) {
         //     // リストにあるp5の関数ブロックの定義
         //     Blockly.Blocks[`p5_${f}`] = {
@@ -1034,6 +1037,7 @@
                         }
                     }
                 }
+                updateToolbox()
             }
         }
 
@@ -1046,11 +1050,11 @@
                         // 関数
                         if (p5_raw[e1][e2]["params"] !== undefined) {
                             // オーバーロードなし
-                            createFunctionBlock(e1, e2, p5_raw[e1][e2]["params"]);
+                            createFunctionBlock(e1.split(".").join("_"), e2, p5_raw[e1][e2]["params"]);
                         } else if (p5_raw[e1][e2]["overloads"] !== undefined) {
                             // オーバーロードあり
                             for (let i = 0; i < p5_raw[e1][e2]["overloads"].length; i++) {
-                                createFunctionBlock(e1, e2, p5_raw[e1][e2]["overloads"][i].params);
+                                createFunctionBlock(e1.split(".").join("_"), e2, p5_raw[e1][e2]["overloads"][i].params);
                             }
                         }
                     } else {
@@ -1064,43 +1068,46 @@
             }
         }
 
-        /* TODO: Change toolbox XML ID if necessary. Can export toolbox XML from Workspace Factory. */
-        var toolbox = document.getElementById("toolbox");
+        let toolbox = null;
+        let workspace = null;
+        function updateToolbox() {
+            /* TODO: Change toolbox XML ID if necessary. Can export toolbox XML from Workspace Factory. */
+            var toolbox = document.getElementById("toolbox");
 
-        var options = {
-            toolbox: toolbox,
-            collapse: true,
-            comments: true,
-            disable: true,
-            maxBlocks: Infinity,
-            trashcan: true,
-            horizontalLayout: false,
-            toolboxPosition: 'start',
-            css: true,
-            media: 'https://blockly-demo.appspot.com/static/media/',
-            rtl: false,
-            scrollbars: true,
-            sounds: true,
-            oneBasedIndex: true,
-            grid: {
-                spacing: 20,
-                length: 2,
-                colour: '#888',
-                snap: false
-            },
-            zoom: {
-                controls: true,
-                wheel: true,
-                startScale: 1,
-                maxScale: 3,
-                minScale: 0.3,
-                scaleSpeed: 1.2
-            }
-        };
+            var options = {
+                toolbox: toolbox,
+                collapse: true,
+                comments: true,
+                disable: true,
+                maxBlocks: Infinity,
+                trashcan: true,
+                horizontalLayout: false,
+                toolboxPosition: 'start',
+                css: true,
+                media: 'https://blockly-demo.appspot.com/static/media/',
+                rtl: false,
+                scrollbars: true,
+                sounds: true,
+                oneBasedIndex: true,
+                grid: {
+                    spacing: 20,
+                    length: 2,
+                    colour: '#888',
+                    snap: false
+                },
+                zoom: {
+                    controls: true,
+                    wheel: true,
+                    startScale: 1,
+                    maxScale: 3,
+                    minScale: 0.3,
+                    scaleSpeed: 1.2
+                }
+            };
 
-        /* Inject your workspace */
-        var workspace = Blockly.inject("blocklyDiv", options);
-
+            /* Inject your workspace */
+            workspace = Blockly.inject("blocklyDiv", options);
+        }
         /* Load Workspace Blocks from XML to workspace. Remove all code below if no blocks to load */
 
         /* TODO: Change workspace blocks XML ID if necessary. Can export workspace blocks XML from Workspace Factory. */
