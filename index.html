@@ -886,93 +886,180 @@
                 p5_raw = data;
                 console.log(data)
                 for (const e1 in p5_raw) {
-                    try {
-                        let class_instance = new window[e1]();
-                        for (const e2 in p5_raw[e1]) {
-                            if (p5_raw[e1][e2]["module"] !== "Foundation") {
-                                // console.log(`${e1}.${e2}`);
-                                let identifier = class_instance[e2]
-                                if (typeof identifier === "function") {
-                                    // 関数
-                                    if (p5_raw[e1][e2]["params"] !== undefined) {
-                                        // オーバーロードなし
-                                        createFunctionBlock(e1, e2, p5_raw[e1][e2]["params"]);
-                                    } else if (p5_raw[e1][e2]["overloads"] !== undefined) {
-                                        // オーバーロードあり
-                                        for (let i = 0; i < p5_raw[e1][e2]["overloads"].length; i++) {
-                                            createFunctionBlock(e1, e2, p5_raw[e1][e2]["overloads"][i].params);
-                                        }
-                                    }
-                                } else {
-                                    // 変数
-
-                                }
-                            } else if (p5_raw[e1][e2]["module"] !== "Constants") {
-                                // 定数
-
-                            }
-                        }
-                    } catch (error) {
+                    if (e1 === "JSON" || e1 === "console") {
+                        continue;
+                    } else {
+                        let class_instance = null;
                         try {
-                            if (e1 === "JSON" || e1 === "console") {
-                                continue;
-                            } else {
+                            // p5の場合
+                            class_instance = new window[e1]();
+
+                            createBlockfromJson(class_instance, e1);
+                            // for (const e2 in p5_raw[e1]) {
+                            //     if (p5_raw[e1][e2]["module"] !== "Foundation") {
+                            //         // console.log(`${e1}.${e2}`);
+                            //         let identifier = class_instance[e2]
+                            //         if (typeof identifier === "function") {
+                            //             // 関数
+                            //             if (p5_raw[e1][e2]["params"] !== undefined) {
+                            //                 // オーバーロードなし
+                            //                 createFunctionBlock(e1, e2, p5_raw[e1][e2]["params"]);
+                            //             } else if (p5_raw[e1][e2]["overloads"] !== undefined) {
+                            //                 // オーバーロードあり
+                            //                 for (let i = 0; i < p5_raw[e1][e2]["overloads"].length; i++) {
+                            //                     createFunctionBlock(e1, e2, p5_raw[e1][e2]["overloads"][i].params);
+                            //                 }
+                            //             }
+                            //         } else {
+                            //             // 変数
+
+                            //         }
+                            //     } else if (p5_raw[e1][e2]["module"] !== "Constants") {
+                            //         // 定数
+
+                            //     }
+                            // }
+                        } catch (error) {
+                            try {
                                 // p5.XXX の場合
                                 let l = e1.split(".");
-                                let class_instance = null;
                                 class_instance = new window[l[0]][l[1]]();
 
-                                if (l[1] === "Color") {
-                                    // p5.Color
-                                    class_instance = color(0);
-                                } else if (l[1] === "Element") {
-                                    // p5.Element
-                                } else if (l[1] === "Graphics") {
-                                    // p5.Graphics
-                                } else if (l[1] === "MediaElement") {
-                                    // p5.MediaElement
-                                } else if (l[1] === "File") {
-                                    // p5.File
-                                } else if (l[1] === "Framebuffer") {
-                                    // p5.Framebuffer
-                                } else if (l[1] === "Amplitude") {
-                                    // p5.Amplitude
-                                } else if (l[1] === "AudioIn") {
-                                    // p5.AudioIn
-                                } else if (l[1] === "SoundRecorder") {
-                                    // p5.SoundRecorder
-                                }
+                                createBlockfromJson(class_instance, e1);
+                                // for (const e2 in p5_raw[e1]) {
+                                //     if (p5_raw[e1][e2]["module"] !== "Foundation") {
+                                //         // console.log(`${e1}.${e2}`);
+                                //         let identifier = class_instance[e2]
+                                //         if (typeof identifier === "function") {
+                                //             // 関数
+                                //             if (p5_raw[e1][e2]["params"] !== undefined) {
+                                //                 // オーバーロードなし
+                                //                 createFunctionBlock(e1, e2, p5_raw[e1][e2]["params"]);
+                                //             } else if (p5_raw[e1][e2]["overloads"] !== undefined) {
+                                //                 // オーバーロードあり
+                                //                 for (let i = 0; i < p5_raw[e1][e2]["overloads"].length; i++) {
+                                //                     createFunctionBlock(e1, e2, p5_raw[e1][e2]["overloads"][i].params);
+                                //                 }
+                                //             }
+                                //         } else {
+                                //             // 変数
 
-                                for (const e2 in p5_raw[e1]) {
-                                    if (e1 === "JSON" || p5_raw[e1][e2]["module"] !== "Foundation") {
-                                        // console.log(`${e1}.${e2}`);
-                                        let identifier = class_instance[e2]
-                                        if (typeof identifier === "function") {
-                                            // 関数
-                                            if (p5_raw[e1][e2]["params"] !== undefined) {
-                                                // オーバーロードなし
-                                                createFunctionBlock(e1, e2, p5_raw[e1][e2]["params"]);
-                                            } else if (p5_raw[e1][e2]["overloads"] !== undefined) {
-                                                // オーバーロードあり
-                                                for (let i = 0; i < p5_raw[e1][e2]["overloads"].length; i++) {
-                                                    createFunctionBlock(e1, e2, p5_raw[e1][e2]["overloads"][i].params);
-                                                }
-                                            }
-                                        } else {
-                                            // 変数
+                                //         }
+                                //     } else if (p5_raw[e1][e2]["module"] !== "Constants") {
+                                //         // 定数
 
-                                        }
-                                    } else if (p5_raw[e1][e2]["module"] !== "Constants") {
-                                        // 定数
+                                //     }
+                                // }
+                            } catch (error2) {
+                                try {
+                                    // p5.XXX の場合(コンストラクタの生成が特殊な場合)
+                                    let l = e1.split(".");
 
+                                    if (l[1] === "Color") {
+                                        // p5.Color
+                                        class_instance = color(0);
+                                    } else if (l[1] === "Element") {
+                                        // p5.Element
+                                        class_instance = new p5.Element(createElement(null));
+                                    } else if (l[1] === "Graphics") {
+                                        // p5.Graphics
+                                        class_instance = createCanvas(0, 0);
+                                    } else if (l[1] === "MediaElement") {
+                                        class_instance = createAudio();
+                                        // p5.MediaElement
+                                    } else if (l[1] === "File") {
+                                        // p5.File
+                                        class_instance = new p5.File(new File([], null))
+                                    } else if (l[1] === "Framebuffer") {
+                                        // p5.Framebuffer
+                                        let _ = new p5();
+                                        _.createCanvas(0, 0, WEBGL);
+                                        class_instance = _.createFramebuffer();
+                                    } else if (l[1] === "Amplitude") {
+                                        // p5.Amplitude
+                                        setTimeout(() => {
+                                            class_instance = new p5.Amplitude();
+                                            // console.log(class_instance);
+                                            createBlockfromJson(class_instance, e1);
+                                        }, 500);
+                                        continue;
+                                    } else if (l[1] === "AudioIn") {
+                                        // p5.AudioIn
+                                        setTimeout(() => {
+                                            class_instance = new p5.Amplitude();
+                                            // console.log(class_instance);
+                                            createBlockfromJson(class_instance, e1);
+                                        }, 500);
+                                        continue;
+                                    } else if (l[1] === "SoundRecorder") {
+                                        // p5.SoundRecorder
+                                        setTimeout(() => {
+                                            class_instance = new p5.Amplitude();
+                                            // console.log(class_instance);
+                                            createBlockfromJson(class_instance, e1);
+                                        }, 500);
+                                        continue;
                                     }
+                                    createBlockfromJson(class_instance, e1);
+                                    // for (const e2 in p5_raw[e1]) {
+                                    //     if (p5_raw[e1][e2]["module"] !== "Foundation") {
+                                    //         // console.log(`${e1}.${e2}`);
+                                    //         let identifier = class_instance[e2]
+                                    //         if (typeof identifier === "function") {
+                                    //             // 関数
+                                    //             if (p5_raw[e1][e2]["params"] !== undefined) {
+                                    //                 // オーバーロードなし
+                                    //                 createFunctionBlock(e1, e2, p5_raw[e1][e2]["params"]);
+                                    //             } else if (p5_raw[e1][e2]["overloads"] !== undefined) {
+                                    //                 // オーバーロードあり
+                                    //                 for (let i = 0; i < p5_raw[e1][e2]["overloads"].length; i++) {
+                                    //                     createFunctionBlock(e1, e2, p5_raw[e1][e2]["overloads"][i].params);
+                                    //                 }
+                                    //             }
+                                    //         } else {
+                                    //             // 変数
+
+                                    //         }
+                                    //     } else if (p5_raw[e1][e2]["module"] !== "Constants") {
+                                    //         // 定数
+
+                                    //     }
+                                    // }
+                                } catch (error3) {
+                                    // console.error(`${e1}: ${error}`);
+                                    // console.error(`${e1}: ${error2}`);
+                                    console.error(`${e1}: ${error3}`);
                                 }
                             }
-                        } catch (error2) {
-                            console.error(`${e1}: ${error2}`);
-
                         }
                     }
+                }
+            }
+        }
+
+        function createBlockfromJson(class_instance, e1) {
+            for (const e2 in p5_raw[e1]) {
+                if (p5_raw[e1][e2]["module"] !== "Foundation") {
+                    // console.log(`${e1}.${e2}`);
+                    let identifier = class_instance[e2]
+                    if (typeof identifier === "function") {
+                        // 関数
+                        if (p5_raw[e1][e2]["params"] !== undefined) {
+                            // オーバーロードなし
+                            createFunctionBlock(e1, e2, p5_raw[e1][e2]["params"]);
+                        } else if (p5_raw[e1][e2]["overloads"] !== undefined) {
+                            // オーバーロードあり
+                            for (let i = 0; i < p5_raw[e1][e2]["overloads"].length; i++) {
+                                createFunctionBlock(e1, e2, p5_raw[e1][e2]["overloads"][i].params);
+                            }
+                        }
+                    } else {
+                        // 変数
+
+                    }
+                } else if (p5_raw[e1][e2]["module"] !== "Constants") {
+                    // 定数
+
                 }
             }
         }
