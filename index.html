@@ -550,6 +550,11 @@
         <category name="Functions" colour="#995ba5" custom="PROCEDURE" id="function_category"></category>
         <sep></sep>
         <category name="p5.js" colour="#ed225e" id="p5_category"></category>
+        <sep></sep>
+        <sep></sep>
+        <sep></sep>
+        <sep></sep>
+        <sep></sep>
     </xml>
     <xml id="startBlocks" style="display: none;">
         <!-- ページを開いたときに配置させるブロック -->
@@ -608,6 +613,16 @@
         </div>
     </div>
     <script>
+        const untitled = "無題";
+        const supportedEvents = new Set([
+            Blockly.Events.BLOCK_CHANGE,
+            Blockly.Events.BLOCK_CREATE,
+            Blockly.Events.BLOCK_DELETE,
+            Blockly.Events.BLOCK_MOVE,
+        ]);
+        let loadedXml;
+        let title;
+        let globalHandle;
 
         // type math_expression: 
         Blockly.Blocks['math_expression'] = {
@@ -774,6 +789,13 @@
                 </value>
             </block>
             */
+            let category = document.getElementById(class_instance);
+            if (category == null) {
+                category = document.createElement("category");
+                category.setAttribute("name", class_instance.split("_").join("."));
+                category.setAttribute("id", class_instance);
+                category.setAttribute("colour", "#ed225e");
+            }
             let new_block = document.createElement("block");
             new_block.setAttribute("type", `${class_instance}_${identifier}`);
             let block_value = document.createElement("value");
@@ -786,7 +808,8 @@
             block_value_shadow.appendChild(block_value_shadow_field);
             block_value.appendChild(block_value_shadow);
             new_block.appendChild(block_value);
-            p5_category.appendChild(new_block);
+            category.appendChild(new_block)
+            p5_category.appendChild(category);
 
         }
 
@@ -1037,7 +1060,11 @@
                         }
                     }
                 }
-                updateToolbox()
+                updateToolbox();
+                blocklyReset();
+                // workspace.clear();
+                // Blockly.Xml.domToWorkspace(document.getElementById("startBlocks"), workspace);
+                workspace.addChangeListener(updateCode);
             }
         }
 
@@ -1070,6 +1097,7 @@
 
         let toolbox = null;
         let workspace = null;
+        let workspaceBlocks = null;
         function updateToolbox() {
             /* TODO: Change toolbox XML ID if necessary. Can export toolbox XML from Workspace Factory. */
             var toolbox = document.getElementById("toolbox");
@@ -1107,21 +1135,15 @@
 
             /* Inject your workspace */
             workspace = Blockly.inject("blocklyDiv", options);
+            /* Load Workspace Blocks from XML to workspace. Remove all code below if no blocks to load */
+
+            /* TODO: Change workspace blocks XML ID if necessary. Can export workspace blocks XML from Workspace Factory. */
+            workspaceBlocks = document.getElementById("startBlocks");
+
+            /* Load blocks to workspace. */
+            Blockly.Xml.domToWorkspace(workspaceBlocks, workspace);
         }
-        /* Load Workspace Blocks from XML to workspace. Remove all code below if no blocks to load */
 
-        /* TODO: Change workspace blocks XML ID if necessary. Can export workspace blocks XML from Workspace Factory. */
-        var workspaceBlocks = document.getElementById("startBlocks");
-
-        /* Load blocks to workspace. */
-        Blockly.Xml.domToWorkspace(workspaceBlocks, workspace);
-
-        const supportedEvents = new Set([
-            Blockly.Events.BLOCK_CHANGE,
-            Blockly.Events.BLOCK_CREATE,
-            Blockly.Events.BLOCK_DELETE,
-            Blockly.Events.BLOCK_MOVE,
-        ]);
 
         function updateCode(event) {
             if (workspace.isDragging()) return; // Don't update while changes are happening.
@@ -1151,7 +1173,7 @@
                 editor.setValue(code);
         }
 
-        workspace.addChangeListener(updateCode);
+        // workspace.addChangeListener(updateCode);
 
 
         function showBlock() {
@@ -1168,9 +1190,6 @@
             textContent.hidden = false;
         }
 
-        const untitled = "無題";
-        let loadedXml;
-        let title;
         async function blocklyOpenFile() {
             // Supports Chrome or Edge (Firefox and Safari are not supported)
             const options = {
@@ -1196,9 +1215,8 @@
             Blockly.Xml.domToWorkspace(loadedXml, workspace);
         }
 
-        let globalHandle;
         // 書き込み処理
-        async function writeFile(fileHandle, contents) {
+        async function writeBlockFile(fileHandle, contents) {
             // writable作成
             const writable = await fileHandle.createWritable();
 
@@ -1242,12 +1260,21 @@
                 title = handle.name;
             }
             document.getElementById("fileName").innerText = title;
-            await writeFile(handle, contents);
+            await writeBlockFile(handle, contents);
             return handle;
         }
 
         function openModal(id) {
 
+        }
+
+        function blocklyReset() {
+            workspace.clear();
+            Blockly.Xml.domToWorkspace(document.getElementById("startBlocks"), workspace);
+            loadedXml = undefined;
+            title = untitled;
+            document.getElementById("fileName").innerText = untitled;
+            globalHandle = undefined;
         }
 
         function blocklyNewFile() {
@@ -1259,12 +1286,7 @@
             }
             modal.hide();
 
-            workspace.clear();
-            Blockly.Xml.domToWorkspace(document.getElementById("startBlocks"), workspace);
-            loadedXml = undefined;
-            title = untitled;
-            document.getElementById("fileName").innerText = untitled;
-            globalHandle = undefined;
+            blocklyReset();
         }
     </script>
 
