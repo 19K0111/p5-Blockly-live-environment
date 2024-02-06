@@ -549,7 +549,9 @@
         <category name="Variables" colour="#a55b80" custom="VARIABLE"></category>
         <category name="Functions" colour="#995ba5" custom="PROCEDURE" id="function_category"></category>
         <sep></sep>
-        <category name="p5.js" colour="#ed225e" id="p5_category"></category>
+        <category name="p5.js" colour="#ed225e" id="p5_category">
+            <category name="General" colour="#ed225e" id="p5_general"></category>
+        </category>
         <sep></sep>
         <sep></sep>
         <sep></sep>
@@ -646,6 +648,8 @@
         let p5_category = document.getElementById("p5_category");
         let function_category = document.getElementById("function_category");
 
+        let p5_general = document.getElementById("p5_general");
+
         // p5 setup() ブロックの定義
         Blockly.Blocks['p5_setup'] = {
             init: function () {
@@ -690,7 +694,7 @@
         for (const f of ["setup", "draw"]) {
             let new_block = document.createElement("block");
             new_block.setAttribute("type", `p5_${f}`);
-            p5_category.appendChild(new_block);
+            p5_general.appendChild(new_block);
         }
 
         // Function argument blocks
@@ -750,34 +754,164 @@
                 block_value.appendChild(block_value_shadow);
                 new_block.appendChild(block_value);
             }
-            p5_category.appendChild(new_block);
+            p5_general.appendChild(new_block);
         }
 
-        function createFunctionBlock(class_instance, identifier, args) {
-            // 関数ブロックの定義
-            Blockly.Blocks[`${class_instance}_${identifier}`] = {
+        // 式を文にするブロック
+        {
+            Blockly.Blocks['instance_statement'] = {
                 init: function () {
-                    this.appendValueInput("ARGS")
-                        .setCheck(null)
-                        .appendField(`${identifier}(`);
-                    // 引数の個数だけ処理をする
-
-                    this.appendEndRowInput()
-                        .appendField(")");
+                    this.appendValueInput("EXPR")
+                        .setCheck(null);
+                    this.setInputsInline(true);
                     this.setPreviousStatement(true, null);
                     this.setNextStatement(true, null);
                     this.setColour(290);
                     this.setTooltip("");
-                    this.setHelpUrl(`https://p5js.org/reference/#/${class_instance}/${identifier}`);
+                    this.setHelpUrl("");
                 }
             };
 
             // コード生成の定義
-            javascript.javascriptGenerator.forBlock[`${class_instance}_${identifier}`] = function (block, generator) {
-                var value_name = generator.valueToCode(block, `ARGS`.toUpperCase(), javascript.Order.NONE); // ex. (10, 20, 30, 40): if Order.ATOMIC, 10, 20, 30, 40: if Order.NONE
-                // var code = block.getFieldValue(`${f}`.toUpperCase()); 
-                return `${identifier}(${value_name});\n`;
+            javascript.javascriptGenerator.forBlock['instance_statement'] = function (block, generator) {
+                var value_expr = generator.valueToCode(block, 'EXPR', javascript.Order.NONE);
+                // TODO: Assemble javascript into code variable.
+                var code = `${value_expr};\n`;
+                return code;
             };
+
+            // ブロック一覧に配置
+            let new_block = document.createElement("block");
+            new_block.setAttribute("type", "instance_statement");
+            let block_value = document.createElement("value");
+            block_value.setAttribute("name", "EXPR");
+            let block_value_shadow = document.createElement("shadow");
+            block_value_shadow.setAttribute("type", "math_expression");
+            let block_value_shadow_field = document.createElement("field");
+            block_value_shadow_field.setAttribute("name", "EXPR");
+            block_value_shadow_field.textContent = "instance";
+            block_value_shadow.appendChild(block_value_shadow_field);
+            block_value.appendChild(block_value_shadow);
+            new_block.appendChild(block_value);
+            p5_general.appendChild(new_block);
+
+        }
+
+
+        // インスタンス式ブロック1
+        {
+            Blockly.Blocks['instance_expression_1'] = {
+                init: function () {
+                    this.appendValueInput("INSTANCE")
+                        .setCheck(null);
+                    this.appendDummyInput()
+                        .appendField(".");
+                    this.appendValueInput("IDENT")
+                        .setCheck(null);
+                    this.setOutput(true, null);
+                    this.setColour(230);
+                    this.setTooltip("");
+                    this.setHelpUrl("");
+                }
+            };
+
+            // コード生成の定義
+            javascript.javascriptGenerator.forBlock['instance_expression_1'] = function (block, generator) {
+                var value_instance = generator.valueToCode(block, 'INSTANCE', javascript.Order.NONE);
+                var value_ident = generator.valueToCode(block, 'IDENT', javascript.Order.NONE);
+                // TODO: Assemble javascript into code variable.
+                var code = `${value_instance}.${value_ident}`;
+                return [code, javascript.Order.NONE];
+            };
+
+            // ブロック一覧に配置
+            let i_statement = document.createElement("block");
+            i_statement.setAttribute("type", "instance_statement");
+            let i_statement_value = document.createElement("value");
+            i_statement_value.setAttribute("name", "EXPR");
+
+            let new_block = document.createElement("block");
+            new_block.setAttribute("type", "instance_expression_1")
+
+            let block_value = document.createElement("value");
+            block_value.setAttribute("name", "INSTANCE");
+            let block_value_shadow = document.createElement("shadow");
+            block_value_shadow.setAttribute("type", "math_expression");
+            let block_value_shadow_field = document.createElement("field");
+            block_value_shadow_field.setAttribute("name", "EXPR");
+            block_value_shadow_field.textContent = "instance";
+
+            let block_value2 = document.createElement("value");
+            block_value2.setAttribute("name", "IDENT");
+            let block_value_shadow2 = document.createElement("shadow");
+            block_value_shadow2.setAttribute("type", "math_expression");
+            let block_value_shadow_field2 = document.createElement("field");
+            block_value_shadow_field2.setAttribute("name", "EXPR");
+            block_value_shadow_field2.textContent = "function(arg)";
+
+            block_value_shadow.appendChild(block_value_shadow_field);
+            block_value.appendChild(block_value_shadow);
+            new_block.appendChild(block_value);
+
+            block_value_shadow2.appendChild(block_value_shadow_field2);
+            block_value2.appendChild(block_value_shadow2);
+            new_block.appendChild(block_value2);
+
+            i_statement_value.appendChild(new_block);
+            i_statement.appendChild(i_statement_value);
+            p5_general.appendChild(i_statement);
+        }
+
+        function createFunctionBlock(class_instance, identifier, args, overloads_count) {
+            if (overloads_count === undefined) {
+                overloads_count = "";
+            }
+            // 関数ブロックの定義
+            if (args.length == 0) {
+                Blockly.Blocks[`${class_instance}_${identifier}${overloads_count}`] = {
+                    init: function () {
+                        this.appendEndRowInput()
+                            .appendField(`${identifier}(`)
+                            .appendField(")");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour(290);
+                        this.setTooltip("");
+                        this.setHelpUrl(`https://p5js.org/reference/#/${class_instance.replaceAll("_", ".")}/${identifier}`);
+                    }
+                };
+
+                // コード生成の定義
+                javascript.javascriptGenerator.forBlock[`${class_instance}_${identifier}${overloads_count}`] = function (block, generator) {
+                    // var code = block.getFieldValue(`${f}`.toUpperCase());
+                    return `${identifier}();\n`;
+                };
+            } else {
+                Blockly.Blocks[`${class_instance}_${identifier}${overloads_count}`] = {
+                    init: function () {
+                        this.appendValueInput("ARGS")
+                            .setCheck(null)
+                            .appendField(`${identifier}(`);
+                        // 引数の個数だけ処理をする
+
+                        this.appendEndRowInput()
+                            .appendField(")");
+                        this.setPreviousStatement(true, null);
+                        this.setNextStatement(true, null);
+                        this.setColour(290);
+                        this.setTooltip("");
+                        this.setHelpUrl(`https://p5js.org/reference/#/${class_instance.replaceAll("_", ".")}/${identifier}`);
+                    }
+                };
+
+                // コード生成の定義
+                javascript.javascriptGenerator.forBlock[`${class_instance}_${identifier}${overloads_count}`] = function (block, generator) {
+                    var value_name = generator.valueToCode(block, `ARGS`.toUpperCase(), javascript.Order.NONE); // ex. (10, 20, 30, 40): if Order.ATOMIC, 10, 20, 30, 40: if Order.NONE
+                    // var code = block.getFieldValue(`${f}`.toUpperCase());
+                    return `${identifier}(${value_name});\n`;
+                };
+            }
+
 
             // id="p5_category"に<block>を動的に追加する処理
             /*
@@ -797,17 +931,22 @@
                 category.setAttribute("colour", "#ed225e");
             }
             let new_block = document.createElement("block");
-            new_block.setAttribute("type", `${class_instance}_${identifier}`);
-            let block_value = document.createElement("value");
-            block_value.setAttribute("name", "ARGS");
-            let block_value_shadow = document.createElement("shadow");
-            block_value_shadow.setAttribute("type", "math_expression");
-            let block_value_shadow_field = document.createElement("field");
-            block_value_shadow_field.setAttribute("name", "EXPR");
-            block_value_shadow_field.textContent = "0";
-            block_value_shadow.appendChild(block_value_shadow_field);
-            block_value.appendChild(block_value_shadow);
-            new_block.appendChild(block_value);
+            new_block.setAttribute("type", `${class_instance}_${identifier}${overloads_count}`);
+
+            if (args.length == 0) {
+
+            } else {
+                let block_value = document.createElement("value");
+                block_value.setAttribute("name", "ARGS");
+                let block_value_shadow = document.createElement("shadow");
+                block_value_shadow.setAttribute("type", "math_expression");
+                let block_value_shadow_field = document.createElement("field");
+                block_value_shadow_field.setAttribute("name", "EXPR");
+                block_value_shadow_field.textContent = "0";
+                block_value_shadow.appendChild(block_value_shadow_field);
+                block_value.appendChild(block_value_shadow);
+                new_block.appendChild(block_value);
+            }
             category.appendChild(new_block)
             p5_category.appendChild(category);
 
@@ -891,7 +1030,7 @@
         {
             let new_block = document.createElement("block");
             new_block.setAttribute("type", `p5_statement`);
-            p5_category.appendChild(new_block);
+            p5_general.appendChild(new_block);
         }
 
 
@@ -989,10 +1128,10 @@
                                         class_instance = new p5.Element(createElement(null));
                                     } else if (l[1] === "Graphics") {
                                         // p5.Graphics
-                                        class_instance = createCanvas(0, 0);
+                                        class_instance = createGraphics(0, 0);
                                     } else if (l[1] === "MediaElement") {
-                                        class_instance = createAudio();
                                         // p5.MediaElement
+                                        class_instance = createAudio();
                                     } else if (l[1] === "File") {
                                         // p5.File
                                         class_instance = new p5.File(new File([], null))
@@ -1007,6 +1146,9 @@
                                             class_instance = new p5.Amplitude();
                                             // console.log(class_instance);
                                             createBlockfromJson(class_instance, e1);
+                                            // updateToolbox();
+                                            // blocklyReset();
+                                            // workspace.addChangeListener(updateCode);
                                         }, 500);
                                         continue;
                                     } else if (l[1] === "AudioIn") {
@@ -1015,6 +1157,9 @@
                                             class_instance = new p5.Amplitude();
                                             // console.log(class_instance);
                                             createBlockfromJson(class_instance, e1);
+                                            // updateToolbox();
+                                            // blocklyReset();
+                                            // workspace.addChangeListener(updateCode);
                                         }, 500);
                                         continue;
                                     } else if (l[1] === "SoundRecorder") {
@@ -1023,6 +1168,9 @@
                                             class_instance = new p5.Amplitude();
                                             // console.log(class_instance);
                                             createBlockfromJson(class_instance, e1);
+                                            // updateToolbox();
+                                            // blocklyReset();
+                                            // workspace.addChangeListener(updateCode);
                                         }, 500);
                                         continue;
                                     }
@@ -1060,11 +1208,13 @@
                         }
                     }
                 }
-                updateToolbox();
-                blocklyReset();
-                // workspace.clear();
-                // Blockly.Xml.domToWorkspace(document.getElementById("startBlocks"), workspace);
-                workspace.addChangeListener(updateCode);
+                setTimeout(() => {
+                    updateToolbox();
+                    blocklyReset();
+                    // workspace.clear();
+                    // Blockly.Xml.domToWorkspace(document.getElementById("startBlocks"), workspace);
+                    workspace.addChangeListener(updateCode);
+                }, 500);
             }
         }
 
@@ -1081,8 +1231,12 @@
                         } else if (p5_raw[e1][e2]["overloads"] !== undefined) {
                             // オーバーロードあり
                             for (let i = 0; i < p5_raw[e1][e2]["overloads"].length; i++) {
-                                createFunctionBlock(e1.split(".").join("_"), e2, p5_raw[e1][e2]["overloads"][i].params);
+                                createFunctionBlock(e1.split(".").join("_"), e2, p5_raw[e1][e2]["overloads"][i].params, `_${i}`);
                             }
+                        } else if (p5_raw[e1][e2]["overloads"] === undefined && p5_raw[e1][e2]["overloads"] === undefined) {
+                            // 引数なし
+                            console.log(`${e1}.${e2}`);
+                            createFunctionBlock(e1.split(".").join("_"), e2, []);
                         }
                     } else {
                         // 変数
