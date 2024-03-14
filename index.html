@@ -160,7 +160,7 @@
                             let current_dir = location.href.split("/");
                             current_dir.pop();
                             // let header_html = `\<html\>\<head\>\<script src=\"${current_dir.join("/")}/p5/p5.min.js\"\>\<\/script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
-                            let header_html = `\<html\>\<head\>\<script src=\"https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"\>\<\/script\>\<script src=\"https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"\>\<\/script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
+                            let header_html = `\<html\>\<head\>\<script src=\"https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"\>\<\/script\>\<script src=\"https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"\>\<\/script\>\<script src=\"https://cdn.socket.io/4.7.4/socket.io.min.js\" integrity=\"sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4\" crossorigin=\"anonymous\"\>\</script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
                             let footer_html = `\<\/script\>\<\/body\>\<\/html\>`;
                             let blob = new Blob([header_html + getCodeBlock() + footer_html], { type: "text/html" });
                             iframe.src = URL.createObjectURL(blob);
@@ -172,13 +172,13 @@
                         // editor.getValue();
                     });
 
-                    function getCodeBlock() {
-                        var data = editor.getValue().replace(/\s+\n/g, "");
-                        data = data.replace(/\s+-+/g, "\n");
-                        console.log(data);
-                        return data;
-                    };
-                </script>
+                                function getCodeBlock() {
+                                    var data = editor.getValue().replace(/\s+\n/g, "");
+                                    // data = data.replace(/\s+-+/g, "\n");
+                                    console.log(data);
+                                    return data;
+                                };
+                            </script>
             </div>
         </div>
 
@@ -650,52 +650,80 @@
 
         let p5_general = document.getElementById("p5_general");
 
-        // p5 setup() ブロックの定義
-        Blockly.Blocks['p5_setup'] = {
-            init: function () {
-                this.appendStatementInput("STATEMENTS")
-                    .setCheck(null)
-                    .appendField("setup");
-                this.setColour(290);
-                this.setTooltip("");
-                this.setHelpUrl("https://p5js.org/reference/#/p5/setup");
-            }
-        };
+        for (const f of ["preload", "setup", "draw"]) {
+            // p5 preload, setup, draw ブロックの定義
+            Blockly.Blocks[`p5_${f}`] = {
+                init: function () {
+                    this.appendStatementInput("STATEMENTS")
+                        .setCheck(null)
+                        .appendField(`${f}`);
+                    this.setColour(290);
+                    this.setTooltip("");
+                    this.setHelpUrl(`https://p5js.org/reference/#/p5/${f}`);
+                }
+            };
 
-        // p5 setup() コード生成の定義
-        javascript.javascriptGenerator.forBlock['p5_setup'] = function (block, generator) {
-            var statements_statements = generator.statementToCode(block, 'STATEMENTS');
-            // TODO: Assemble javascript into code variable.
-            var code = `function setup(){\n${generator.statementToCode(block, 'STATEMENTS')}}`;
-            return code;
-        };
+            // p5 preload, setup, draw コード生成の定義
+            javascript.javascriptGenerator.forBlock[`p5_${f}`] = function (block, generator) {
+                var statements_statements = generator.statementToCode(block, 'STATEMENTS');
+                // TODO: Assemble javascript into code variable.
+                var code = `function ${f}(){\n${generator.statementToCode(block, 'STATEMENTS')}}`;
+                return code;
+            };
 
-        // p5 draw() ブロックの定義
-        Blockly.Blocks['p5_draw'] = {
-            init: function () {
-                this.appendStatementInput("STATEMENTS")
-                    .setCheck(null)
-                    .appendField("draw");
-                this.setColour(290);
-                this.setTooltip("");
-                this.setHelpUrl("https://p5js.org/reference/#/p5/draw");
-            }
-        };
-
-        // p5 draw() コード生成の定義
-        javascript.javascriptGenerator.forBlock['p5_draw'] = function (block, generator) {
-            var statements_statements = generator.statementToCode(block, 'STATEMENTS');
-            // TODO: Assemble javascript into code variable.
-            var code = `function draw(){\n${generator.statementToCode(block, 'STATEMENTS')}}`;
-            return code;
-        };
-
-        // setup, drawをp5カテゴリに追加
-        for (const f of ["setup", "draw"]) {
+            // preload, setup, drawをp5カテゴリに追加
             let new_block = document.createElement("block");
             new_block.setAttribute("type", `p5_${f}`);
             p5_general.appendChild(new_block);
         }
+
+
+        // // p5 setup() ブロックの定義
+        // Blockly.Blocks['p5_setup'] = {
+        //     init: function () {
+        //         this.appendStatementInput("STATEMENTS")
+        //             .setCheck(null)
+        //             .appendField("setup");
+        //         this.setColour(290);
+        //         this.setTooltip("");
+        //         this.setHelpUrl("https://p5js.org/reference/#/p5/setup");
+        //     }
+        // };
+
+        // // p5 setup() コード生成の定義
+        // javascript.javascriptGenerator.forBlock['p5_setup'] = function (block, generator) {
+        //     var statements_statements = generator.statementToCode(block, 'STATEMENTS');
+        //     // TODO: Assemble javascript into code variable.
+        //     var code = `function setup(){\n${generator.statementToCode(block, 'STATEMENTS')}}`;
+        //     return code;
+        // };
+
+        // // p5 draw() ブロックの定義
+        // Blockly.Blocks['p5_draw'] = {
+        //     init: function () {
+        //         this.appendStatementInput("STATEMENTS")
+        //             .setCheck(null)
+        //             .appendField("draw");
+        //         this.setColour(290);
+        //         this.setTooltip("");
+        //         this.setHelpUrl("https://p5js.org/reference/#/p5/draw");
+        //     }
+        // };
+
+        // // p5 draw() コード生成の定義
+        // javascript.javascriptGenerator.forBlock['p5_draw'] = function (block, generator) {
+        //     var statements_statements = generator.statementToCode(block, 'STATEMENTS');
+        //     // TODO: Assemble javascript into code variable.
+        //     var code = `function draw(){\n${generator.statementToCode(block, 'STATEMENTS')}}`;
+        //     return code;
+        // };
+
+        // // setup, drawをp5カテゴリに追加
+        // for (const f of ["setup", "draw"]) {
+        //     let new_block = document.createElement("block");
+        //     new_block.setAttribute("type", `p5_${f}`);
+        //     p5_general.appendChild(new_block);
+        // }
 
         // Function argument blocks
         const ARG_MAX = 4; // 最大の引数の個数
@@ -862,6 +890,115 @@
             p5_general.appendChild(i_statement);
         }
 
+        // インスタンスを考慮した代入ブロック
+        {
+            Blockly.Blocks['instance_assignment'] = {
+                init: function () {
+                    this.appendValueInput("VAR")
+                        .setCheck(null);
+                    this.appendValueInput("VAL")
+                        .setCheck(null)
+                        .appendField("に");
+                    this.appendEndRowInput()
+                        .appendField("をセット");
+                    this.setOutput(true, null);
+                    this.setColour(230);
+                    this.setTooltip("");
+                    this.setHelpUrl("");
+                }
+            };
+
+            // コード生成の定義
+            javascript.javascriptGenerator.forBlock['instance_assignment'] = function (block, generator) {
+                var value_var = generator.valueToCode(block, 'VAR', javascript.Order.NONE);
+                var value_val = generator.valueToCode(block, 'VAL', javascript.Order.NONE);
+                // TODO: Assemble javascript into code variable.
+                var code = `${value_var} = ${value_val}`;
+                // TODO: Change ORDER_NONE to the correct strength.
+                return [code, javascript.Order.NONE];
+            };
+
+            // ブロック一覧に配置
+            let i_statement = document.createElement("block");
+            i_statement.setAttribute("type", "instance_statement");
+            let i_statement_value = document.createElement("value");
+            i_statement_value.setAttribute("name", "EXPR");
+
+            let new_block = document.createElement("block");
+            new_block.setAttribute("type", "instance_assignment")
+
+            let block_value = document.createElement("value");
+            block_value.setAttribute("name", "VAR");
+            let block_value_shadow = document.createElement("shadow");
+            block_value_shadow.setAttribute("type", "math_expression");
+            let block_value_shadow_field = document.createElement("field");
+            block_value_shadow_field.setAttribute("name", "EXPR");
+            block_value_shadow_field.textContent = "variable";
+
+            let block_value2 = document.createElement("value");
+            block_value2.setAttribute("name", "VAL");
+            let block_value_shadow2 = document.createElement("shadow");
+            block_value_shadow2.setAttribute("type", "math_expression");
+            let block_value_shadow_field2 = document.createElement("field");
+            block_value_shadow_field2.setAttribute("name", "EXPR");
+            block_value_shadow_field2.textContent = "value";
+
+            block_value_shadow.appendChild(block_value_shadow_field);
+            block_value.appendChild(block_value_shadow);
+            new_block.appendChild(block_value);
+
+            block_value_shadow2.appendChild(block_value_shadow_field2);
+            block_value2.appendChild(block_value_shadow2);
+            new_block.appendChild(block_value2);
+
+            i_statement_value.appendChild(new_block);
+            i_statement.appendChild(i_statement_value);
+            p5_general.appendChild(i_statement);
+        }
+
+        function createVarValBlock(class_instance, identifier) {
+            Blockly.Blocks[`${class_instance}_${identifier}`] = {
+                init: function () {
+                    this.appendEndRowInput()
+                        .appendField(`${identifier}`)
+                    this.setOutput(true, null);
+                    this.setColour(230);
+                    this.setTooltip("");
+                    this.setHelpUrl(`https://p5js.org/reference/#/${class_instance.replaceAll("_", ".")}/${identifier}`);
+                }
+            };
+
+            // コード生成の定義
+            javascript.javascriptGenerator.forBlock[`${class_instance}_${identifier}`] = function (block, generator) {
+                // var code = block.getFieldValue(`${f}`.toUpperCase());
+                return `${identifier}`;
+            };
+
+            // id="p5_category"に<block>を動的に追加する処理
+            /*
+            <block type="p5_xxx">
+                <value name="ARGS">
+                    <shadow type="math_expression">
+                        <field name="EXPR">0</field>
+                    </shadow>
+                </value>
+            </block>
+            */
+            let category = document.getElementById(class_instance);
+            if (category == null) {
+                category = document.createElement("category");
+                category.setAttribute("name", class_instance.split("_").join("."));
+                category.setAttribute("id", class_instance);
+                category.setAttribute("colour", "#ed225e");
+            }
+            let new_block = document.createElement("block");
+            new_block.setAttribute("type", `${class_instance}_${identifier}`);
+
+            category.appendChild(new_block)
+            p5_category.appendChild(category);
+
+        }
+
         function createFunctionBlock(class_instance, identifier, args, overloads_count) {
             if (overloads_count === undefined) {
                 overloads_count = "";
@@ -951,6 +1088,51 @@
             p5_category.appendChild(category);
 
         }
+
+        function createEventBlock(class_instance, identifier) {
+            Blockly.Blocks[`${class_instance}_${identifier}`] = {
+                init: function () {
+                    this.appendEndRowInput()
+                        .appendField(`${identifier}`);
+                    this.appendStatementInput("STATEMENTS")
+                        .setCheck(null);
+                    this.setColour(290);
+                    this.setTooltip("");
+                    this.setHelpUrl(`https://p5js.org/reference/#/${class_instance.replaceAll("_", ".")}/${identifier}`);
+                }
+            };
+
+            // コード生成の定義
+            javascript.javascriptGenerator.forBlock[`${class_instance}_${identifier}`] = function (block, generator) {
+                var code = `function ${identifier}(){\n${generator.statementToCode(block, 'STATEMENTS')}}`;
+                return code;
+            };
+
+            // id="p5_category"に<block>を動的に追加する処理
+            /*
+            <block type="p5_xxx">
+                <value name="ARGS">
+                    <shadow type="math_expression">
+                        <field name="EXPR">0</field>
+                    </shadow>
+                </value>
+            </block>
+            */
+            let category = document.getElementById(class_instance);
+            if (category == null) {
+                category = document.createElement("category");
+                category.setAttribute("name", class_instance.split("_").join("."));
+                category.setAttribute("id", class_instance);
+                category.setAttribute("colour", "#ed225e");
+            }
+            let new_block = document.createElement("block");
+            new_block.setAttribute("type", `${class_instance}_${identifier}`);
+
+            category.appendChild(new_block)
+            p5_category.appendChild(category);
+
+        }
+
 
         // test for p5 block
         // let functions = ["fill", "rect", "ellipse", "line"]
@@ -1236,15 +1418,19 @@
                         } else if (p5_raw[e1][e2]["overloads"] === undefined && p5_raw[e1][e2]["overloads"] === undefined) {
                             // 引数なし
                             console.log(`${e1}.${e2}`);
-                            createFunctionBlock(e1.split(".").join("_"), e2, []);
+                            if (e2 !== "preload") {
+                                createFunctionBlock(e1.split(".").join("_"), e2, []);
+                            }
                         }
                     } else {
-                        // 変数
-
+                        if (p5_raw[e1][e2]["params"] !== undefined) {
+                            // イベント
+                            createEventBlock(e1.split(".").join("_"), e2);
+                        } else if ((e2 !== "preload" && e2 !== "setup" && e2 !== "draw")) {
+                            // 変数、定数
+                            createVarValBlock(e1.split(".").join("_"), e2);
+                        }
                     }
-                } else if (p5_raw[e1][e2]["module"] !== "Constants") {
-                    // 定数
-
                 }
             }
         }
