@@ -19,6 +19,11 @@
     <script src="bootstrap-5.3.0-dist/js/bootstrap.min.js"></script>
     <script src="bootstrap-5.3.0-dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"
+        integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4"
+        crossorigin="anonymous"></script>
+
     <!-- ローカル等でサーバを構築する必要があるモジュール -->
     <script src="main.js"></script>
 
@@ -161,8 +166,9 @@
                             current_dir.pop();
                             // let header_html = `\<html\>\<head\>\<script src=\"${current_dir.join("/")}/p5/p5.min.js\"\>\<\/script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
                             let header_html = `\<html\>\<head\>\<script src=\"https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"\>\<\/script\>\<script src=\"https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"\>\<\/script\>\<script src=\"https://cdn.socket.io/4.7.4/socket.io.min.js\" integrity=\"sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4\" crossorigin=\"anonymous\"\>\</script\>\</head\>\<body\>\<main\>\</main\>\<script\>`;
+                            let socket_script = `var socket = io('http://localhost:3000');/*socket.on('greeting-from-server', function (message) {document.body.appendChild(document.createTextNode(message.greeting));socket.emit('greeting-from-client', {greeting: 'Hello Server'});});*/window.addEventListener('beforeunload',(event)=\>{socket.disconnect();console.log("disconnected: ", socket.id);});`;
                             let footer_html = `\<\/script\>\<\/body\>\<\/html\>`;
-                            let blob = new Blob([header_html + getCodeBlock() + footer_html], { type: "text/html" });
+                            let blob = new Blob([header_html + socket_script + getCodeBlock() + footer_html], { type: "text/html" });
                             iframe.src = URL.createObjectURL(blob);
 
                         })
@@ -173,7 +179,8 @@
                     });
 
                                 function getCodeBlock() {
-                                    var data = editor.getValue().replace(/\s+\n/g, "");
+                                    var data = editor.getValue();
+                                    // var data = editor.getValue().replace(/\s+\n/g, "");
                                     // data = data.replace(/\s+-+/g, "\n");
                                     console.log(data);
                                     return data;
@@ -954,6 +961,64 @@
             i_statement_value.appendChild(new_block);
             i_statement.appendChild(i_statement_value);
             p5_general.appendChild(i_statement);
+        }
+
+        // 複数行入力用のブロック
+        {
+            Blockly.Blocks['multiple_text'] = {
+                init: function () {
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldMultilineInput("class ExampleClass{\n    // Multiple Text Example\n}"), "TEXT");
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour(290);
+                    this.setTooltip("");
+                    this.setHelpUrl("");
+                }
+            };
+
+            // コード生成の定義
+            javascript.javascriptGenerator.forBlock['multiple_text'] = function (block, generator) {
+                var value_text = block.getFieldValue("TEXT"); // generator.statementToCode(block, `TEXT`);
+                // TODO: Assemble javascript into code variable.
+                var code = `${value_text}\n`;
+                // TODO: Change ORDER_NONE to the correct strength.
+                return code;
+            };
+
+            // ブロック一覧に配置
+            let new_block = document.createElement("block");
+            new_block.setAttribute("type", "multiple_text");
+            p5_general.appendChild(new_block);
+        }
+
+        // 複数行コメント用のブロック
+        {
+            Blockly.Blocks['multiple_comment'] = {
+                init: function () {
+                    this.appendDummyInput()
+                        .appendField(new Blockly.FieldMultilineInput("ここから\nここまでコメント"), "TEXT");
+                    this.setPreviousStatement(true, null);
+                    this.setNextStatement(true, null);
+                    this.setColour(120);
+                    this.setTooltip("");
+                    this.setHelpUrl("");
+                }
+            };
+
+            // コード生成の定義
+            javascript.javascriptGenerator.forBlock['multiple_comment'] = function (block, generator) {
+                var value_text = block.getFieldValue("TEXT"); // generator.statementToCode(block, `TEXT`);
+                // TODO: Assemble javascript into code variable.
+                var code = `/* ${value_text} */\n`;
+                // TODO: Change ORDER_NONE to the correct strength.
+                return code;
+            };
+
+            // ブロック一覧に配置
+            let new_block = document.createElement("block");
+            new_block.setAttribute("type", "multiple_comment");
+            p5_general.appendChild(new_block);
         }
 
         function createVarValBlock(class_instance, identifier) {
