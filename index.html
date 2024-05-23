@@ -820,7 +820,7 @@
             new_block.setAttribute("type", "instance_statement");
             let block_value = document.createElement("value");
             block_value.setAttribute("name", "EXPR");
-            let block_value_shadow = document.createElement("shadow");
+            let block_value_shadow = document.createElement("block");
             block_value_shadow.setAttribute("type", "math_expression");
             let block_value_shadow_field = document.createElement("field");
             block_value_shadow_field.setAttribute("name", "EXPR");
@@ -1036,7 +1036,7 @@
             // コード生成の定義
             javascript.javascriptGenerator.forBlock[`${class_instance}_${identifier}`] = function (block, generator) {
                 // var code = block.getFieldValue(`${f}`.toUpperCase());
-                return `${identifier}`;
+                return [`${identifier}`, javascript.Order.NONE];
             };
 
             // id="p5_category"に<block>を動的に追加する処理
