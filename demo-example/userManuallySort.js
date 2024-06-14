@@ -1,6 +1,7 @@
 const MARGIN = { x: 10, y: 40 };
 const SPACING = { x: 5, y: 5 };
 const BOX = { width: 30, height: 40 };
+const WEBGL_MARGIN = { x: 500, y: 500 };
 const DEBUG = true;
 
 const COLOR1 = "#ffffff";
@@ -10,14 +11,18 @@ const COLOR3 = "#00ffff";
 let canvas;
 let state, sorted;
 let environment;
+let myfont;
 
 let restart_button;
 let draw_button;
 let ff_button;
 let save_frame;
+let frames;
+let slider;
 
 function initializeVars() {
     frameCount = 0;
+    frames = [];
     environment = {
         state: 0,
         array: [6, 5, 4, 3, 2, 1],
@@ -46,8 +51,15 @@ function showVars(env) {
     }
 }
 
+function preload() {
+    myfont = loadFont("https://fonts.gstatic.com/ea/notosansjapanese/v6/NotoSansJP-Bold.otf");
+}
+
 function setup() {
-    canvas = createCanvas(1000, 1000);
+    createCanvas(1000, 1000, WEBGL);
+    textFont(myfont);
+    canvas = createFramebuffer();
+    translate(-1000, -1000);
     background(255);
     frameRate(1);
     initializeVars();
@@ -65,10 +77,19 @@ function setup() {
     ff_button.elt.disabled = true;
     save_frame = createCheckbox("save frame");
     save_frame.position(MARGIN.x + 220, 10);
+    slider = createSlider(0, 0);
+    slider.position(MARGIN.x + 350, 10);
+    slider.size(200);
+    slider.elt.disabled = true;
 
     restart_button.mousePressed(() => {
+        push();
+        translate(-1000, -1000);
         if (environment.draw_flag) {
             draw_button.html("stop");
+        }
+        if (!slider.elt.disabled) {
+            slider.elt.disabled = true;
         }
         draw_button.elt.disabled = false;
         // ff_button.elt.disabled = false;
@@ -77,6 +98,7 @@ function setup() {
         initializeVars();
         showVars(environment);
         frameRate(1);
+        pop();
     });
 
     draw_button.mousePressed(() => {
@@ -85,6 +107,9 @@ function setup() {
             frameRate(0);
             draw_button.html("start");
             // ff_button.elt.disabled = true;
+            slider.elt.disabled = false;
+            slider.attribute("max", frames.length - 1);
+            slider.value(frameCount);
             if (save_frame.checked()) {
                 /* サーバにframecountを渡す */
                 socket.emit("saveFrameCount", frameCount);
@@ -93,6 +118,7 @@ function setup() {
             frameRate(1);
             draw_button.html("stop");
             // ff_button.elt.disabled = false;
+            slider.elt.disabled = true;
         }
     });
 
@@ -112,6 +138,16 @@ function setup() {
         socket.emit("saveFrame", !save_frame.checked());
     });
 
+    slider.input(() => {
+        if (environment.draw_flag) {
+            push();
+            translate(-1000, -1000);
+            // drawFrame(slider.value());
+            image(frames[slider.value()], 0, 0);
+            pop();
+        }
+    })
+
     /* サーバからframecountを受け取る */
     socket.on("sendFrameCount", function (data) {
         environment.savedFrameCount = data;
@@ -127,7 +163,8 @@ function setup() {
     frameRate(0);
 }
 
-function draw() {
+function drawFrame(count = frameCount) {
+
     // bubbleSortAnimation(environment.array, environment.i, environment.j);
     userManuallySort(environment.array);
     // frameRate(0);
@@ -156,6 +193,27 @@ function draw() {
         frameRate(0);
     }
     showVars(environment);
+}
+
+function draw() {
+    push();
+    translate(-1000, -1000);
+    if (environment.draw_flag) {
+        // stop
+        // drawFrame(slider.value());
+        if (slider.value() < frameCount) {
+            drawFrame(slider.value());
+            image(frames[slider.value()], 0, 0);
+        }
+    } else {
+        // start
+        canvas.begin();
+        drawFrame();
+        canvas.end();
+        frames.push(canvas.get());
+        image(canvas, 0, 0);
+    }
+    pop();
 }
 
 function userManuallySort(array) {
@@ -203,9 +261,9 @@ function mouseMoved() {
     if (DEBUG) {
         strokeWeight(0);
         fill(COLOR1);
-        rect(250, 420, 135, 45);
+        rect(50, 120, 135, 45);
         fill("#000000");
-        text(`(${mouseX}, ${mouseY})`, 250, 450);
+        text(`(${mouseX}, ${mouseY})`, 50, 150);
         strokeWeight(1);
     }
 }
@@ -213,7 +271,7 @@ function mouseMoved() {
 function mousePressed() {
     // userManuallySort(environment.array);
     let x = judgeBox(environment.array);
-    if (x >= 0) {
+    if (x >= 0 && !environment.draw_flag) {
         if (DEBUG) {
             strokeWeight(0);
             fill("#fffff");
