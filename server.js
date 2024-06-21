@@ -14,7 +14,9 @@ var mime = {
 };
 
 var frameCount = 0;
-let save_frame = true;
+let save_frame_flag = true;
+let environment = {};
+let frames = [];
 
 server = new http.createServer(function (req, res) {
 
@@ -35,7 +37,7 @@ server = new http.createServer(function (req, res) {
     });
 }).listen(3000);
 
-io = socketIO(server);
+io = socketIO(server, { maxHttpBufferSize: 1e12 /* 1TB */ });
 console.log('Server is running at http://localhost:3000/');
 // クライアントが接続してきたときの処理
 io.on('connection', function (socket) {
@@ -50,15 +52,29 @@ io.on('connection', function (socket) {
         frameCount = cnt;
         console.log(`saved: ${frameCount}`);
     });
-    socket.on('saveFrame', function (flag) {
-        save_frame = flag;
-        console.log(`save frame: ${save_frame}`);
+    socket.on('saveEnvironment', function (env) {
+        environment = env;
+        environment.stop_flag = false;
+        console.log(`saved environment: ${environment}`);
+    });
+    socket.on('saveFrame', function (img) {
+        frames = img;
+        console.log(`saved frames: ${frames.length > 0 ? "(Base64 string)" : ""}`);
+    });
+    socket.on('saveFlag', function (flag) {
+        save_frame_flag = flag;
+        console.log(`save flag: ${save_frame_flag}`);
     });
     setTimeout(() => {
+        console.log(`${new Date()}`);
+        socket.emit("sendEnvironment", environment);
+        console.log(`sent environment: ${environment}`);
         socket.emit("sendFrameCount", frameCount);
         console.log(`sent: ${frameCount}`);
-        socket.emit("sendSaveFrame", save_frame);
-        console.log(`sent: ${save_frame}`);
+        socket.emit("sendFrame", frames);
+        console.log(`sent Base64 frames: ${frames.length > 0 ? "(Base64 string)" : ""}`);
+        socket.emit("sendFlag", save_frame_flag);
+        console.log(`sent save flag: ${save_frame_flag}\n`);
     }, 500);
 });
 

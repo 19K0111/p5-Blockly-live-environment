@@ -31,7 +31,7 @@ function initializeVars() {
         j: -1,
         sorted: false,
         reset_flag: false,
-        draw_flag: false,
+        stop_flag: false,
         ff_flag: false,
         savedFrameCount: 0,
     }
@@ -85,7 +85,7 @@ function setup() {
     restart_button.mousePressed(() => {
         push();
         translate(-1000, -1000);
-        if (environment.draw_flag) {
+        if (environment.stop_flag) {
             draw_button.html("stop");
         }
         if (!slider.elt.disabled) {
@@ -102,8 +102,9 @@ function setup() {
     });
 
     draw_button.mousePressed(() => {
-        environment.draw_flag = !environment.draw_flag;
-        if (environment.draw_flag) {
+        environment.stop_flag = !environment.stop_flag;
+        // stop: true, start: false
+        if (environment.stop_flag) {
             frameRate(0);
             draw_button.html("start");
             // ff_button.elt.disabled = true;
@@ -113,6 +114,10 @@ function setup() {
             if (save_frame.checked()) {
                 /* サーバにframecountを渡す */
                 socket.emit("saveFrameCount", frameCount);
+                socket.emit("saveEnvironment", environment);
+                // socket.emit("saveFrame", frames);
+                let base64Array = imagesToBase64Array(frames);
+                socket.emit("saveFrame", base64Array);
             }
         } else {
             frameRate(1);
@@ -135,11 +140,11 @@ function setup() {
     save_frame.mouseReleased(() => {
         /* サーバにsave_frameを渡す */
         /* checkedはクリックする前の値なので反転させる */
-        socket.emit("saveFrame", !save_frame.checked());
+        socket.emit("saveFlag", !save_frame.checked());
     });
 
     slider.input(() => {
-        if (environment.draw_flag) {
+        if (environment.stop_flag) {
             push();
             translate(-1000, -1000);
             // drawFrame(slider.value());
@@ -150,13 +155,37 @@ function setup() {
 
     /* サーバからframecountを受け取る */
     socket.on("sendFrameCount", function (data) {
-        environment.savedFrameCount = data;
-        frameRate(1);
+        if (!environment.stop_flag) {
+            environment.savedFrameCount = data;
+            frameRate(1);
+        }
     });
-    console.log(socket);
+
+    /* サーバからenvironmentを受け取る */
+    socket.on("sendEnvironment", function (data) {
+        if (!environment.stop_flag) {
+            if (Object.keys(data).length !== 0) {
+                environment = data;
+            }
+            frameRate(1);
+        }
+    });
+
+    /* サーバからframeを受け取る */
+    socket.on("sendFrame", function (data) {
+        if (!environment.stop_flag) {
+            frames = [];
+            for (let i = 0; i < data.length; i++) {
+                base64ToP5Image(data[i], (p5Image) => {
+                    frames.push(p5Image);
+                });
+            }
+            frameRate(1);
+        }
+    });
 
     /* サーバからsave_frameを受け取る */
-    socket.on("sendSaveFrame", function (data) {
+    socket.on("sendFlag", function (data) {
         save_frame.checked(data);
     });
     console.log(socket);
@@ -198,20 +227,28 @@ function drawFrame(count = frameCount) {
 function draw() {
     push();
     translate(-1000, -1000);
-    if (environment.draw_flag) {
+    if (environment.stop_flag) {
         // stop
         // drawFrame(slider.value());
-        if (slider.value() < frameCount) {
+        if (slider.value() < frameCount && frames.length > 0) {
             drawFrame(slider.value());
             image(frames[slider.value()], 0, 0);
         }
     } else {
         // start
-        canvas.begin();
-        drawFrame();
-        canvas.end();
-        frames.push(canvas.get());
-        image(canvas, 0, 0);
+        if (frameCount <= frames.length) {
+            frameRate(30);
+            image(frames[frameCount - 1], 0, 0);
+            if (frameCount === frames.length) {
+                frameRate(0);
+            }
+        } else {
+            canvas.begin();
+            drawFrame();
+            canvas.end();
+            frames.push(canvas.get());
+            image(canvas, 0, 0);
+        }
     }
     pop();
 }
@@ -271,7 +308,7 @@ function mouseMoved() {
 function mousePressed() {
     // userManuallySort(environment.array);
     let x = judgeBox(environment.array);
-    if (x >= 0 && !environment.draw_flag) {
+    if (x >= 0 && !environment.stop_flag) {
         if (DEBUG) {
             strokeWeight(0);
             fill("#fffff");
@@ -316,7 +353,7 @@ function judgeBox(array) {
 
 function displayNumbers(start, end, color) {
     if (frameCount < environment.savedFrameCount && save_frame.checked()) {
-        frameRate(120)
+        frameRate(120);
     } else {
         if (environment.ff_flag) {
             frameRate(5);
@@ -331,4 +368,28 @@ function displayNumbers(start, end, color) {
         textSize(20);
         text(environment.array[x], MARGIN.x + 8 + x * (BOX.width + SPACING.x), MARGIN.y + 27);
     }
+}
+
+function imageToBase64(p5Image) {
+    // Create an offscreen canvas
+    let offscreenCanvas = document.createElement('canvas');
+    offscreenCanvas.width = p5Image.width;
+    offscreenCanvas.height = p5Image.height;
+    let context = offscreenCanvas.getContext('2d');
+
+    // Draw the p5.Image onto the offscreen canvas
+    context.drawImage(p5Image.canvas, 0, 0, p5Image.width, p5Image.height);
+
+    // Get the data URL of the offscreen canvas
+    let dataURL = offscreenCanvas.toDataURL('image/png'); // You can change 'image/png' to 'image/jpeg' if you prefer JPEG
+
+    return dataURL;
+}
+
+function imagesToBase64Array(p5Images) {
+    return p5Images.map(image => imageToBase64(image));
+}
+function base64ToP5Image(base64, callback) {
+    let img = loadImage(base64);
+    callback(img);
 }
