@@ -254,7 +254,7 @@ let solutionPath;
 let drawFlag = false;
 let drawPathFlag = true;
 
-let player = new Player();
+let player;
 
 function removeWallsAtRandom() {
     removedWalls = [];
@@ -280,6 +280,7 @@ function initialize() {
     if (s.solve()) {
         solutionPath = s.getSolution();
     }
+    player = new Player();
 }
 
 function drawPath(path, initialPosition,) {
