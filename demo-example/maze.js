@@ -85,7 +85,7 @@ class MazeGenerator {
     maze; // Maze
     stateVisitedFlags; // 2D array
     solution; // Array<MVector>
-    random; // Random
+    // random; // Random
 
     constructor(maze) {
         this.maze = maze;
@@ -98,7 +98,7 @@ class MazeGenerator {
             }
         }
         this.solution = [];
-        this.random = Math.random();
+        // this.random = Math.random();
     }
     getSolution() {
         return this.solution;
@@ -237,7 +237,7 @@ let drawPathFlag = true;
 
 function removeWallsAtRandom() {
     removedWalls = [];
-    let random = Math.random();
+    // let random = Math.random();
     for (let y = 0; y < Maze.SIZE - 1; y++) {
         for (let x = 0; x < Maze.SIZE - 1; x++) {
             if (((x % 2 == 0 && y % 2 == 1) || (x % 2 == 1 && y % 2 == 0)) && maze.cells[x][y] && Math.floor(Math.random() * 100) == 0) {
