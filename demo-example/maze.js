@@ -226,6 +226,25 @@ class MazeSolver {
     }
 }
 
+class Player {
+    position; // MVector
+
+    constructor() {
+        this.position = Maze.START;
+    }
+
+    move(direction) {
+        let n_position = new MVector([this.position.x + direction.x, this.position.y + direction.y]);
+        if (0 < n_position.x && n_position.x < Maze.SIZE &&
+            0 < n_position.y && n_position.y < Maze.SIZE) {
+            if (!maze.cells[(this.position.x + n_position.x) / 2][(this.position.y + n_position.y) / 2]) {
+                this.position = n_position;
+            }
+        }
+    }
+
+}
+
 const CELL_SIZE = 10;
 
 let maze;
@@ -234,6 +253,8 @@ let originalPath;
 let solutionPath;
 let drawFlag = false;
 let drawPathFlag = true;
+
+let player = new Player();
 
 function removeWallsAtRandom() {
     removedWalls = [];
@@ -319,6 +340,10 @@ function draw() {
         drawCell(Maze.START.x, Maze.START.y);
         fill(0, 255, 0);
         drawCell(Maze.GOAL.x, Maze.GOAL.y);
+
+        // drawing player
+        fill(255, 255, 0);
+        drawCell(player.position.x, player.position.y);
         drawFlag = true;
     }
 }
@@ -326,13 +351,23 @@ function draw() {
 function keyPressed() {
     if (key == 's') {
 
-    }
-    else if (key == 'r') {
+    } else if (key == 'r') {
         initialize();
         drawFlag = false;
-    }
-    else if (key == 'd') {
+    } else if (key == 'd') {
         drawPathFlag = !drawPathFlag;
+        drawFlag = false;
+    } else if (key == "ArrowUp") {
+        player.move(MVector.UP);
+        drawFlag = false;
+    } else if (key == "ArrowRight") {
+        player.move(MVector.RIGHT);
+        drawFlag = false;
+    } else if (key == "ArrowDown") {
+        player.move(MVector.DOWN);
+        drawFlag = false;
+    } else if (key == "ArrowLeft") {
+        player.move(MVector.LEFT);
         drawFlag = false;
     }
 }
