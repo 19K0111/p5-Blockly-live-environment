@@ -1,7 +1,3 @@
-const CANVAS = { width: 500, height: 300 };
-const TEXT = { x: 170, y: 134 };
-const LINE = { x: 210, y: 150 };
-
 class MVector {
     // Vector
     static get UP() { return new MVector([0, -2]); }
