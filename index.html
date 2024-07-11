@@ -155,7 +155,7 @@
                                 // readOnly: true,
                             }
                         );
-                        editor.getModel().onDidChangeContent((event) => {
+                        editor.getModel().onDidChangeContent(debounce((event) => {
                             // console.log(editor.getValue());
                             // eval("" + editor.getValue() + "_setup_();_draw_();");
                             // execCode = new Function(getCodeBlock());
@@ -171,7 +171,7 @@
                             let blob = new Blob([header_html + socket_script + getCodeBlock() + footer_html], { type: "text/html" });
                             iframe.src = URL.createObjectURL(blob);
 
-                        })
+                        }, 3000)) // 最後のキー入力からコードを更新するまでの間隔(ミリ秒)
                         // editor.updateOptions({
                         //   wordWrap: "on",
                         // });
@@ -185,6 +185,19 @@
                                     console.log(data);
                                     return data;
                                 };
+
+                                function debounce(func, wait) {
+                                    let timeout;
+                                    return function () {
+                                        const context = this;
+                                        const args = arguments;
+                                        clearTimeout(timeout);
+                                        timeout = setTimeout(() => {
+                                            timeout = null;
+                                            func.apply(context, args);
+                                        }, wait);
+                                    };
+                                }
                             </script>
             </div>
         </div>
