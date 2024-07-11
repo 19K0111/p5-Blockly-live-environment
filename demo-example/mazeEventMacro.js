@@ -367,6 +367,12 @@ function drawCell(x, y) {
     rect(CELL_SIZE * x, CELL_SIZE * y, CELL_SIZE, CELL_SIZE);
 }
 
+function drawPlayer(x, y) {
+    stroke(0);
+    strokeWeight(1);
+    ellipse(CELL_SIZE * (x + 0.5), CELL_SIZE * (y + 0.5), CELL_SIZE, CELL_SIZE);
+}
+
 function setup() {
     createCanvas(CELL_SIZE * Maze.SIZE, CELL_SIZE * Maze.SIZE);
     initialize();
@@ -413,14 +419,26 @@ function draw() {
 
         // drawing player
         fill(255, 255, 0);
-        drawCell(player.position.x, player.position.y);
+        drawPlayer(player.position.x, player.position.y);
         drawFlag = true;
+    }
+    if (player.position.x == Maze.GOAL.x && player.position.y == Maze.GOAL.y) {
+        fill(255, 255, 128, 5);
+        rect(0, 40, CELL_SIZE * Maze.SIZE, 70)
+        fill(255, 0, 0);
+        textSize(40);
+        text("CLEAR", 10, 90);
     }
 }
 
-function keyPressed() {
-    if (key == 's') {
+function mouseMoved(event) {
+    // console.log(event);
+}
 
+function keyPressed(event) {
+    console.log(event)
+    if (key == 't') {
+        startToGoalTest();
     } else if (key == 'r') {
         initialize();
         drawFlag = false;
@@ -440,4 +458,21 @@ function keyPressed() {
         player.move(MVector.LEFT);
         drawFlag = false;
     }
+}
+
+const sleep = (time) => new Promise((resolve) => setTimeout(resolve, time));
+async function keyInputTest(key) {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: key }));
+    window.dispatchEvent(new KeyboardEvent("keyup", { key: key }));
+    await sleep(100);
+}
+
+async function startToGoalTest() {
+    await keyInputTest("r");
+    await keyInputTest("ArrowRight");
+    await keyInputTest("ArrowDown");
+    await keyInputTest("ArrowRight");
+    await keyInputTest("ArrowRight");
+    await keyInputTest("ArrowDown");
+    await keyInputTest("ArrowDown");
 }

@@ -397,4 +397,88 @@ function keyPressed() {
         board = new Board([]);
         gameOverFlag = false;
     }
+    else if (key == "t") {
+        blackWinTest();
+    }
+}
+
+// 指定した時間(ミリ秒)だけ待つ
+const sleep = (time) => new Promise((resolve) => setTimeout(resolve, time));
+
+// キーkeyの入力をテストする
+async function keyInputTest(key) {
+    window.dispatchEvent(new KeyboardEvent("keydown", { key: key }));
+    window.dispatchEvent(new KeyboardEvent("keyup", { key: key }));
+    await sleep(100);
+}
+
+// マウスを座標(x, y)に移動するテスト
+async function mouseMoveTest(x, y) {
+    window.dispatchEvent(new MouseEvent("mousemove", { clientX: x, clientY: y }));
+    await sleep(100);
+}
+
+// 座標(x, y)でマウスクリックするテスト
+async function mouseInputTest(x, y) {
+    window.dispatchEvent(new PointerEvent("click", { clientX: x, clientY: y }));
+    await sleep(100);
+}
+
+// テスト関数
+async function automaticallyPlaceTest() {
+    await keyInputTest("r");
+    let record = [[2, 3], [3, 2], [5, 4], [4, 5]];
+    for (let i = 0; i < record.length; i++) {
+        let c = transformBoardLocation(record[i][0], record[i][1]);
+        await mouseMoveTest(c.x, c.y);
+        await mouseInputTest(c.x, c.y);
+    }
+}
+
+// 座標から配列で扱うためのLocationに変換する
+function addressToBoardLocation(str) {
+    let x = str.charCodeAt(0) - "a".charCodeAt(0);
+    let y = str.charCodeAt(1) - "1".charCodeAt(0);
+    return new Location(x, y);
+}
+
+// 黒が勝つときのテスト関数
+async function blackWinTest() {
+    await keyInputTest("r");
+    let record = ["f5", "d6", "c5", "f4", "e3", "f6", "g5", "e6", "e7"];
+    for (let i = 0; i < record.length; i++) {
+        let c1 = addressToBoardLocation(record[i]);
+        let c2 = transformBoardLocation(c1.x, c1.y);
+        await mouseMoveTest(c2.x, c2.y);
+        await mouseInputTest(c2.x, c2.y);
+    }
+}
+
+// 白が勝つときのテスト関数
+async function whiteWinTest() {
+    await keyInputTest("r");
+    let record = ["f5", "f6", "c4", "f4", "e6", "b4", "g6", "f7", "e8", "g8", "g5", "h5"];
+    for (let i = 0; i < record.length; i++) {
+        let c1 = addressToBoardLocation(record[i]);
+        let c2 = transformBoardLocation(c1.x, c1.y);
+        await mouseMoveTest(c2.x, c2.y);
+        await mouseInputTest(c2.x, c2.y);
+    }
+}
+
+// 引き分けのテスト関数
+async function drawTest() {
+    await keyInputTest("r");
+    let record = ["f5", "d6", "c3", "d3", "c4", "f4", "f6", "f3", "e6", "e7",
+        "d7", "c5", "b6", "d8", "c6", "c7", "d2", "b5", "a5", "a6",
+        "a7", "g5", "e3", "b4", "c8", "g6", "g4", "c2", "e8", "d1",
+        "f7", "e2", "g3", "h4", "f1", "e1", "f2", "g1", "b1", "f8",
+        "g8", "b3", "h3", "b2", "h5", "b7", "a3", "a4", "a1", "a2",
+        "c1", "h2", "h1", "g2", "b8", "a8", "g7", "h8", "h7", "h6"];
+    for (let i = 0; i < record.length; i++) {
+        let c1 = addressToBoardLocation(record[i]);
+        let c2 = transformBoardLocation(c1.x, c1.y);
+        await mouseMoveTest(c2.x, c2.y);
+        await mouseInputTest(c2.x, c2.y);
+    }
 }
