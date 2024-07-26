@@ -7,7 +7,9 @@ p5.jsとGoogle Blocklyを合わせたライブコーディングシステム
 
 ## 使い方
 サーバを立ち上げる。([`server2.js`](server2.js)はExpressモジュールを使用)
+
 `$ node server2.js`
+
 Google Chromeで[localhost:3000](http://localhost:3000/)にアクセス
 
 ## ライブラリ
