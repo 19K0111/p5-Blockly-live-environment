@@ -5,6 +5,11 @@ p5.jsとGoogle Blocklyを合わせたライブコーディングシステム
 ## インストール
 `$ git clone https://github.com/19K0111/p5-Blockly-live-environment.git`  
 
+## 使い方
+サーバを立ち上げる。([`server2.js`](server2.js)はExpressモジュールを使用)
+`$ node server2.js`
+Google Chromeで[localhost:3000](http://localhost:3000/)にアクセス
+
 ## ライブラリ
 Google Blockly: [`node_modules/`](node_modules)  
 p5.js: [`p5/`](p5/)

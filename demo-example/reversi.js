@@ -330,15 +330,15 @@ function drawBoard(board) {
             }
         }
     }
-    recs = board.getRecords;
+    let recs = board.getRecords;
     if (recs.length > 0) {
-        lastRec = recs[recs.length - 1];
+        let lastRec = recs[recs.length - 1];
         if (lastRec != null) {
-            color = lastRec.color;
-            placed = lastRec.placedPiece;
+            let color = lastRec.color;
+            let placed = lastRec.placedPiece;
             drawPiece(placed.x, placed.y, color, 1, 1.5);
             for (let i = 0; i < lastRec.flippedPieces.length; i++) {
-                flipped = lastRec.flippedPieces[i];
+                let flipped = lastRec.flippedPieces[i];
                 drawPiece(flipped.x, flipped.y, color, 1, 1);
 
             }
@@ -353,8 +353,8 @@ function draw() {
         alert(`黒 ${bc} - ${wc} 白\n${(bc > wc ? "黒の勝ち" : (bc < wc ? "白の勝ち" : "引き分け"))}`);
         resultToShowFlag = false;
     } else if (!gameOverFlag) {
-        nextTurnFlag = false;
-        playerType = playerTypes[board.getCurrentColor];
+        let nextTurnFlag = false;
+        let playerType = playerTypes[board.getCurrentColor];
         if (playerType == 0) {
             // human vs human
             let l = transformScreenPosition(mouseX, mouseY);
