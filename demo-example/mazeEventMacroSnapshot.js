@@ -448,7 +448,7 @@ function setup() {
 
     restart_button.mousePressed(() => {
         push();
-        translate(BOX.width - (CELL_SIZE * Maze.SIZE + 200) / 1, BOX.height - (CELL_SIZE * Maze.SIZE + 500) / 1);
+        translate(BOX.width - (CELL_SIZE * Maze.SIZE + 500) / 1, BOX.height - (CELL_SIZE * Maze.SIZE + 600) / 1);
         if (environment.stop_flag) {
             draw_button.html("stop");
         }
@@ -511,7 +511,7 @@ function setup() {
     slider.input(() => {
         if (environment.stop_flag) {
             push();
-            translate(BOX.width - (CELL_SIZE * Maze.SIZE + 200) / 1, BOX.height - (CELL_SIZE * Maze.SIZE + 500) / 1);
+            translate(BOX.width - (CELL_SIZE * Maze.SIZE + 500) / 1, BOX.height - (CELL_SIZE * Maze.SIZE + 600) / 1);
             // drawFrame(slider.value());
             image(frames[slider.value()], 0, 0);
             pop();
