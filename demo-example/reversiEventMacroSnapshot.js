@@ -267,7 +267,7 @@ let myfont;
 
 let playerTypes; // 先手・後手のプレイヤー
 // let timeLimitedFlag; // 時間制限するかどうか
-let board; // 局面
+// let board; // 局面
 // let aiThread; // AIスレッド
 let mouseClickedFlag; // マウスがクリックされたかどうか
 let gameOverFlag; // ゲームオーバーかどうか
@@ -281,12 +281,13 @@ function initializeVars() {
     frameCount = 0;
     frames = [];
     environment = {
+        board: new Board([]),
         reset_flag: false,
         stop_flag: false,
         ff_flag: false,
         savedFrameCount: 0,
     }
-    board = new Board([]);
+    // board = new Board([]);
     mouseClickedFlag = false;
     gameOverFlag = false;
     showVars(environment);
@@ -429,6 +430,12 @@ function setup() {
         if (!environment.stop_flag) {
             if (Object.keys(data).length !== 0) {
                 environment = data;
+                let t = new Board([]);
+                t.board = environment.board.board;
+                t.currentColor = environment.board.currentColor;
+                t.counts = environment.board.counts;
+                t.records = environment.board.records;
+                environment.board = t;
             }
             frameRate(FPS);
         }
@@ -552,7 +559,7 @@ function draw() {
             frameRate(30);
             image(frames[frameCount - 1], 0, 0);
             if (frameCount === frames.length) {
-                frameRate(0);
+                // frameRate(0);
             }
         } else {
             canvas.begin();
@@ -568,38 +575,38 @@ function draw() {
 
 function drawFrame(count = frameCount) {
     if (resultToShowFlag) {
-        let bc = board.getCount(0);
-        let wc = board.getCount(1);
+        let bc = environment.board.getCount(0);
+        let wc = environment.board.getCount(1);
         alert(`黒 ${bc} - ${wc} 白\n${(bc > wc ? "黒の勝ち" : (bc < wc ? "白の勝ち" : "引き分け"))}`);
         resultToShowFlag = false;
     } else if (!gameOverFlag) {
         let nextTurnFlag = false;
-        let playerType = playerTypes[board.getCurrentColor];
+        let playerType = playerTypes[environment.board.getCurrentColor];
         if (playerType == 0) {
             // human vs human
             let l = transformScreenPosition(mouseX - BOX.width, mouseY - BOX.height);
             // console.log(l);
-            if (l.x < 0 || l.x >= 8 || l.y < 0 || l.y >= 8 || !board.isLegal([l])) {
-                drawBoard(board);
+            if (l.x < 0 || l.x >= 8 || l.y < 0 || l.y >= 8 || !environment.board.isLegal([l])) {
+                drawBoard(environment.board);
             } else if (mouseClickedFlag) {
-                board.put([l]);
+                environment.board.put([l]);
                 nextTurnFlag = true;
             } else {
-                drawBoard(board);
-                drawPiece(l.x, l.y, board.getCurrentColor, 0.5, -1);
+                drawBoard(environment.board);
+                drawPiece(l.x, l.y, environment.board.getCurrentColor, 0.5, -1);
             }
         }
         if (nextTurnFlag) {
-            if (!board.isLegal([])) {
-                board.pass();
-                if (!board.isLegal([])) {
-                    board.undo();
+            if (!environment.board.isLegal([])) {
+                environment.board.pass();
+                if (!environment.board.isLegal([])) {
+                    environment.board.undo();
                     gameOverFlag = true;
                     resultToShowFlag = true;
                 }
-                drawBoard(board);
+                drawBoard(environment.board);
                 if (!gameOverFlag) {
-                    playerType = playerTypes[board.getCurrentColor];
+                    playerType = playerTypes[environment.board.getCurrentColor];
                 }
             }
         }

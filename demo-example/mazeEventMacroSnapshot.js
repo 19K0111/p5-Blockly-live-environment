@@ -233,8 +233,8 @@ class MazeSolver {
 class Player {
     position; // MVector
 
-    constructor() {
-        this.position = Maze.START;
+    constructor(x = Maze.START.x, y = Maze.START.y) {
+        this.position = new MVector([x, y]);
     }
 
     move(direction) {
@@ -274,7 +274,7 @@ let solutionPath;
 let drawFlag = false;
 let drawPathFlag = false;
 
-let player;
+// let player;
 
 function removeWallsAtRandom() {
     removedWalls = [];
@@ -293,6 +293,7 @@ function initializeVars() {
     frameCount = 0;
     frames = [];
     environment = {
+        player: new Player(),
         reset_flag: false,
         stop_flag: false,
         ff_flag: false,
@@ -377,7 +378,7 @@ function initialize() {
     if (s.solve()) {
         solutionPath = s.getSolution();
     }
-    player = new Player();
+    // player = new Player();
     initializeVars();
 }
 
@@ -531,6 +532,7 @@ function setup() {
         if (!environment.stop_flag) {
             if (Object.keys(data).length !== 0) {
                 environment = data;
+                environment.player = new Player(environment.player.position.x, environment.player.position.y);
             }
             frameRate(1);
         }
@@ -628,11 +630,11 @@ function drawFrame(count = frameCount) {
 
         // drawing player
         fill(255, 255, 0);
-        drawPlayer(player.position.x, player.position.y);
+        drawPlayer(environment.player.position.x, environment.player.position.y);
         drawFlag = true;
     }
     frameRate(0);
-    if (player.position.x == Maze.GOAL.x && player.position.y == Maze.GOAL.y) {
+    if (environment.player.position.x == Maze.GOAL.x && environment.player.position.y == Maze.GOAL.y) {
         if (get(BOX.width + 10, BOX.height + 50)[2] < 154) {
             frameRate(0);
         } else {
@@ -700,19 +702,19 @@ function keyPressed(event) {
         drawFlag = false;
         redraw();
     } else if (key == "ArrowUp") {
-        player.move(MVector.UP);
+        environment.player.move(MVector.UP);
         drawFlag = false;
         redraw();
     } else if (key == "ArrowRight") {
-        player.move(MVector.RIGHT);
+        environment.player.move(MVector.RIGHT);
         drawFlag = false;
         redraw();
     } else if (key == "ArrowDown") {
-        player.move(MVector.DOWN);
+        environment.player.move(MVector.DOWN);
         drawFlag = false;
         redraw();
     } else if (key == "ArrowLeft") {
-        player.move(MVector.LEFT);
+        environment.player.move(MVector.LEFT);
         drawFlag = false;
         redraw();
     }
